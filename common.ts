@@ -1,3 +1,6 @@
+/// <reference path ="jquery.d.ts"/>
+/// <reference path ="google.analytics.d.ts"/>
+
 class MyClass {
     greet(): void {
         console.log("Hello, planet 42!");
@@ -43,10 +46,10 @@ xmlhttp.send();
 
 
 function create_index() {
-    var letters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    var w = 100.0/letters.length;
-    str = '<table id="navigationBar" width="100%"><TR>';
-    for (var i = 0; i < letters.length; i++ ) {
+    var letters:string = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    var w:number = 100.0/letters.length;
+    var str:string = '<table id="navigationBar" width="100%"><TR>';
+    for (var i:number = 0; i < letters.length; i++ ) {
         str += '<td align="center" width="'
                + w
                + '%"><a href="#'
@@ -56,16 +59,16 @@ function create_index() {
                + '</a></td>';
     }
   str += '<tr></table>';
-  $( "body" ).prepend(str);
+  $("body").prepend(str);
 }
 
 // ---------------------------------------------------------------------------------------------------------------
 
 function do_email() {
-    window.location = "mailto:"
-                      + "lmazure.website%40gmail.com"
-                      + "?subject="
-                      + encodeURIComponent("about the '"
+    window.location.href = "mailto:"
+                           + "lmazure.website%40gmail.com"
+                           + "?subject="
+                           + encodeURIComponent("about the '"
                                + document.title
                                +"' page");
 }
@@ -88,10 +91,11 @@ function display_search() {
 // ---------------------------------------------------------------------------------------------------------------
 
 function do_search() {
-  var request = "http://www.google.com/search?as_sitesearch=mazure.fr&q=";
-  var terms = document.search.terms.value.split(" ");
-  for (i = 0; i < terms.length; i++) {
-    if (terms[i]!="") { // to avoid additional space characters
+  var request:string = "http://www.google.com/search?as_sitesearch=mazure.fr&q=";
+  //var terms:string[] = document.search.terms.value.split(" ");
+  var terms:string[] = (<string>($("#searchPanel>#panel>#text").val())).split(" ");
+  for (var i:number = 0; i < terms.length; i++) {
+    if (terms[i] != "") { // to avoid additional space characters
       if (i>0) request += "+";
       request += terms[i];
     }
@@ -110,8 +114,8 @@ function do_search() {
 // clearcase/command
 
 function do_reference(str) {
-    var a = str.split("/");
-    var url="?";
+    var a:string = str.split("/");
+    var url:string = "?";
     if ( a[0] == "rfc" ) {
         //url = "http://www.zvon.org/tmRFC/RFC"+a[1]+"/Output/index.html";
         url = "http://www.ietf.org/rfc/rfc"+a[1]+".txt";
