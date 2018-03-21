@@ -37,7 +37,7 @@ xmlhttp.onreadystatechange = function() {
         document.getElementById("demo").innerHTML = fullString;
     }
 };
-xmlhttp.open("GET", "author.json");
+xmlhttp.open("GET", "../content_tables/author.json");
 xmlhttp.send();
 
 
@@ -117,12 +117,11 @@ function do_reference(str) {
     var a:string = str.split("/");
     var url:string = "?";
     if ( a[0] == "rfc" ) {
-        //url = "http://www.zvon.org/tmRFC/RFC"+a[1]+"/Output/index.html";
         url = "http://www.ietf.org/rfc/rfc"+a[1]+".txt";
     } else if ( a[0] == "man" && a[1] == "linux" ) {
-        url = "http://man7.org/linux/man-pages/man"+a[2]+"/"+a[3]+"."+a[2]+".html";
+        url = "http://man7.org/linux/man-pages/man"+a[2].substr(0,1)+"/"+a[3]+"."+a[2]+".html";
     } else if ( a[0] == "man" && a[1] == "macosx" ) {
-        url = "http://developer.apple.com/documentation/Darwin/Reference/ManPages/man"+a[2]+"/"+a[3]+"."+a[2]+".html";
+        url = "https://developer.apple.com/legacy/library/documentation/Darwin/Reference/ManPages/man"+a[2]+"/"+a[3]+"."+a[2]+".html";
     } else if ( a[0] == "man" && a[1] == "x11" ) {
         url = "http://www.x.org/X11R6.8.2/doc/"+a[3]+"."+a[2]+".html"
     } else if ( a[0] == "j2se" && a.length == 2 ) {
@@ -138,11 +137,20 @@ function do_reference(str) {
 // ---------------------------------------------------------------------------------------------------------------
 
 function initialize() {
-  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-
+    var currdate : any = new Date();
+  
+    /* tslint:disable:no-string-literal */
+    /* tslint:disable:semicolon */
+    /* tslint:disable:no-unused-expression */
+    // This code is from Google, so let's not modify it too much
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*currdate;a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    /* tslint:enable:no-unused-expression */
+    /* tslint:enable:semicolon */
+    /* tslint:enable:no-string-literal */
+  
   ga('create', 'UA-45789787-1', 'auto');
   ga('send', 'pageview');
 }
