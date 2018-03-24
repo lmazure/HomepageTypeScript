@@ -1,12 +1,6 @@
 /// <reference path ="jquery.d.ts"/>
 /// <reference path ="google.analytics.d.ts"/>
 
-class MyClass {
-    greet(): void {
-        console.log("Hello, planet 42!");
-    }
-}
-
 interface Author {
     namePrefix:string;
     firstName:string;
@@ -16,11 +10,17 @@ interface Author {
     givenName:string;
 }
 
-var myObject = new MyClass();
-myObject.greet();
+interface mapNode {
+    title:string;
+    page:string;
+    languages:string[];
+    formats:string[];
+    children:mapNode[];
+}
 
-var xmlhttp = new XMLHttpRequest();
-xmlhttp.onreadystatechange = function() {
+/*
+var authorsRequest = new XMLHttpRequest();
+authorsRequest.onreadystatechange = function() {
     if (this.readyState == 4 && this.status == 200) {
         var myObj = JSON.parse(this.responseText);
         var fullString:string = "";
@@ -37,8 +37,55 @@ xmlhttp.onreadystatechange = function() {
         document.getElementById("demo").innerHTML = fullString;
     }
 };
-xmlhttp.open("GET", "../content_tables/author.json");
-xmlhttp.send();
+authorsRequest.open("GET", "../content_tables/author.json");
+authorsRequest.send();
+*/
+
+function buildNodeText(node:mapNode):string {
+    var str:string = "";
+    if (node.page == undefined) {
+        str += escapeHtml(node.title);
+    } else {
+        str += "<a href=\"../" + node.page + "\" title=\"language:";
+        for (var i=0; i < node.languages.length; i++) {
+            str += " " + node.languages[i];
+        }
+        str += " | format:";
+        for (var i=0; i < node.formats.length; i++) {
+            str += " " + node.formats[i];
+        }
+        str += "\" target=\"_self\"><span class=\"linktitle\">" + escapeHtml(node.title) +"</span></a>";
+    }
+    if (node.children != undefined) {
+        str += "<ul>";
+        for (var i=0; i<node.children.length; i++) {
+            str += "<li>" + buildNodeText(node.children[i]) + "</li>";
+        }
+        str += "</ul>";
+    }
+    return str;
+}
+
+var mapRequest = new XMLHttpRequest();
+mapRequest.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+        var myObj = JSON.parse(this.responseText);
+        document.getElementById("map").innerHTML = buildNodeText(myObj.root);
+    }
+};
+mapRequest.open("GET", "../hack/map.json");
+mapRequest.send();
+
+
+
+function escapeHtml(unsafe:string):string {
+    return unsafe
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
+ }
 
 
 
