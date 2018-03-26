@@ -41,42 +41,66 @@ authorsRequest.open("GET", "../content_tables/author.json");
 authorsRequest.send();
 */
 
-function buildNodeText(node:mapNode):string {
-    var str:string = "";
-    if (node.page == undefined) {
-        str += escapeHtml(node.title);
-    } else {
-        str += "<a href=\"../" + node.page + "\" title=\"language:";
-        for (var i=0; i < node.languages.length; i++) {
-            str += " " + node.languages[i];
-        }
-        str += " | format:";
-        for (var i=0; i < node.formats.length; i++) {
-            str += " " + node.formats[i];
-        }
-        str += "\" target=\"_self\"><span class=\"linktitle\">" + escapeHtml(node.title) +"</span></a>";
+class MapBuilder {
+
+    private static divCounter:number = 0;
+
+    constructor() {
     }
-    if (node.children != undefined) {
-        str += "<ul>";
-        for (var i=0; i<node.children.length; i++) {
-            str += "<li>" + buildNodeText(node.children[i]) + "</li>";
-        }
-        str += "</ul>";
+
+    buildMap():void  {
+        var mapRequest = new XMLHttpRequest();
+        var that:MapBuilder = this;
+        mapRequest.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                var myObj = JSON.parse(this.responseText);
+                document.getElementById("map").innerHTML = that.buildNodeText(myObj.root, 0);
+            }
+        };
+        mapRequest.open("GET", "../hack/map.json");
+        mapRequest.send();    
     }
-    return str;
+
+    public buildNodeText(node:mapNode, depth:number):string {
+        var openedNodeSymbol:string = "\u25BC ";
+        var closedNodeSymbol:string = "\u25BC ";
+        var str:string = "";
+        for (var i=0; i < depth; i++) {
+            str += "&nbsp;&nbsp;&nbsp;&nbsp;";
+        }
+        if (node.page == undefined) {
+            str += escapeHtml(node.title);
+        } else {
+            str += "<A href=\"../" + node.page + "\" title=\"language:";
+            for (var i=0; i < node.languages.length; i++) {
+                str += " " + node.languages[i];
+            }
+            str += " | format:";
+            for (var i=0; i < node.formats.length; i++) {
+                str += " " + node.formats[i];
+            }
+            str += "\" target=\"_self\"><span class=\"linktitle\">" + escapeHtml(node.title) +"</span></A>";
+        }
+        if (node.children == undefined) {
+            str += "<BR/>";
+        } else {
+            var id = "mapDiv" + MapBuilder.divCounter;
+            MapBuilder.divCounter++;
+            str += "<A onclick=\"$('#" 
+                    +id
+                    + "').toggle(); return(false);\" href=\"#\">" 
+                    + openedNodeSymbol
+                    + "</A><BR/><SPAN id=\""
+                    + id
+                    + "\">"
+            for (var i=0; i<node.children.length; i++) {
+                str += this.buildNodeText(node.children[i], depth + 1);
+            }
+            str += "</SPAN>";
+        }
+        return str;
+    }
 }
-
-var mapRequest = new XMLHttpRequest();
-mapRequest.onreadystatechange = function() {
-    if (this.readyState == 4 && this.status == 200) {
-        var myObj = JSON.parse(this.responseText);
-        document.getElementById("map").innerHTML = buildNodeText(myObj.root);
-    }
-};
-mapRequest.open("GET", "../hack/map.json");
-mapRequest.send();
-
-
 
 function escapeHtml(unsafe:string):string {
     return unsafe
@@ -86,11 +110,6 @@ function escapeHtml(unsafe:string):string {
          .replace(/"/g, "&quot;")
          .replace(/'/g, "&#039;");
  }
-
-
-
-
-
 
 function create_index() {
     var letters:string = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -139,7 +158,6 @@ function display_search() {
 
 function do_search() {
   var request:string = "http://www.google.com/search?as_sitesearch=mazure.fr&q=";
-  //var terms:string[] = document.search.terms.value.split(" ");
   var terms:string[] = (<string>($("#searchPanel>#panel>#text").val())).split(" ");
   for (var i:number = 0; i < terms.length; i++) {
     if (terms[i] != "") { // to avoid additional space characters
@@ -201,6 +219,9 @@ function initialize() {
   ga('create', 'UA-45789787-1', 'auto');
   ga('send', 'pageview');
 }
-  
+
+var builder:MapBuilder = new MapBuilder();
+builder.buildMap();
+
 window.onload=initialize;
 
