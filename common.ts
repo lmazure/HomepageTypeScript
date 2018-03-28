@@ -43,7 +43,9 @@ authorsRequest.send();
 
 class MapBuilder {
 
-    private static divCounter:number = 0;
+    divCounter:number = 0;
+    static openedNodeSymbol:string = "\u25BC";
+    static closedNodeSymbol:string = "\u25BA";
 
     constructor() {
     }
@@ -61,9 +63,18 @@ class MapBuilder {
         mapRequest.send();    
     }
 
-    public buildNodeText(node:mapNode, depth:number):string {
-        var openedNodeSymbol:string = "\u25BC ";
-        var closedNodeSymbol:string = "\u25BC ";
+    public handleNodeClick(index:number): boolean {
+        if ($("#spanDiv" + index).is(":visible")) {
+            $("#spanDiv" + index).hide();
+            document.getElementById("toggleDiv" + index).innerHTML = MapBuilder.closedNodeSymbol;
+        } else {
+            $("#spanDiv" + index).show();
+            document.getElementById("toggleDiv" + index).innerHTML = MapBuilder.openedNodeSymbol;
+        }
+        return(false);
+    }
+
+    buildNodeText(node:mapNode, depth:number):string {
         var str:string = "";
         for (var i=0; i < depth; i++) {
             str += "&nbsp;&nbsp;&nbsp;&nbsp;";
@@ -84,15 +95,16 @@ class MapBuilder {
         if (node.children == undefined) {
             str += "<BR/>";
         } else {
-            var id = "mapDiv" + MapBuilder.divCounter;
-            MapBuilder.divCounter++;
-            str += "<A onclick=\"$('#" 
-                    +id
-                    + "').toggle(); return(false);\" href=\"#\">" 
-                    + openedNodeSymbol
+            str += "<A onclick=\"MapBuilder.prototype.handleNodeClick(" 
+                    + this.divCounter
+                    + ")\" href=\"#\" id=\""
+                    + "toggleDiv" + this.divCounter
+                    + "\">" 
+                    + MapBuilder.openedNodeSymbol
                     + "</A><BR/><SPAN id=\""
-                    + id
+                    + "spanDiv" + this.divCounter
                     + "\">"
+            this.divCounter++;
             for (var i=0; i<node.children.length; i++) {
                 str += this.buildNodeText(node.children[i], depth + 1);
             }
@@ -101,6 +113,10 @@ class MapBuilder {
         return str;
     }
 }
+
+/*function handleClick(index:number) {
+    return MapBuilder.
+}*/
 
 function escapeHtml(unsafe:string):string {
     return unsafe
