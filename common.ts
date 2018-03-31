@@ -46,6 +46,8 @@ class MapBuilder {
     divCounter:number = 0;
     static openedNodeSymbol:string = "\u25BC";
     static closedNodeSymbol:string = "\u25BA";
+    static spanDivName:string = "spanDiv";
+    static toggleDivName:string = "toggleDiv";
 
     constructor() {
     }
@@ -56,7 +58,7 @@ class MapBuilder {
         mapRequest.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
                 var myObj = JSON.parse(this.responseText);
-                document.getElementById("map").innerHTML = that.buildNodeText(myObj.root, 0);
+                document.getElementById("content").innerHTML = that.buildNodeText(myObj.root, 0);
             }
         };
         mapRequest.open("GET", "../hack/map.json");
@@ -64,12 +66,12 @@ class MapBuilder {
     }
 
     public handleNodeClick(index:number): boolean {
-        if ($("#spanDiv" + index).is(":visible")) {
-            $("#spanDiv" + index).hide();
-            document.getElementById("toggleDiv" + index).innerHTML = MapBuilder.closedNodeSymbol;
+        if ($("#" + MapBuilder.spanDivName + index).is(":visible")) {
+            $("#" + MapBuilder.spanDivName + index).hide();
+            document.getElementById(MapBuilder.toggleDivName + index).innerHTML = MapBuilder.closedNodeSymbol;
         } else {
-            $("#spanDiv" + index).show();
-            document.getElementById("toggleDiv" + index).innerHTML = MapBuilder.openedNodeSymbol;
+            $("#" + MapBuilder.spanDivName + index).show();
+            document.getElementById(MapBuilder.toggleDivName + index).innerHTML = MapBuilder.openedNodeSymbol;
         }
         return(false);
     }
@@ -98,11 +100,11 @@ class MapBuilder {
             str += "<A onclick=\"MapBuilder.prototype.handleNodeClick(" 
                     + this.divCounter
                     + ")\" href=\"#\" id=\""
-                    + "toggleDiv" + this.divCounter
+                    + MapBuilder.toggleDivName + this.divCounter
                     + "\">" 
                     + MapBuilder.openedNodeSymbol
                     + "</A><BR/><SPAN id=\""
-                    + "spanDiv" + this.divCounter
+                    + MapBuilder.spanDivName + this.divCounter
                     + "\">"
             this.divCounter++;
             for (var i=0; i<node.children.length; i++) {
@@ -113,10 +115,6 @@ class MapBuilder {
         return str;
     }
 }
-
-/*function handleClick(index:number) {
-    return MapBuilder.
-}*/
 
 function escapeHtml(unsafe:string):string {
     return unsafe
@@ -217,7 +215,9 @@ function do_reference(str) {
 
 // ---------------------------------------------------------------------------------------------------------------
 
-function initialize() {
+declare function postInitialize():void;
+
+function initialize():void {
     var currdate : any = new Date();
   
     /* tslint:disable:no-string-literal */
@@ -234,10 +234,14 @@ function initialize() {
   
   ga('create', 'UA-45789787-1', 'auto');
   ga('send', 'pageview');
+
+  if (typeof postInitialize === "function") {
+    postInitialize();
+  }
 }
 
-var builder:MapBuilder = new MapBuilder();
-builder.buildMap();
+//var builder:MapBuilder = new MapBuilder();
+//builder.buildMap();
 
 window.onload=initialize;
 
