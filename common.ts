@@ -53,11 +53,11 @@ class MapBuilder {
     }
 
     buildMap():void  {
-        var mapRequest = new XMLHttpRequest();
-        var that:MapBuilder = this;
+        const mapRequest = new XMLHttpRequest();
+        const that:MapBuilder = this;
         mapRequest.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
-                var myObj = JSON.parse(this.responseText);
+                const myObj = JSON.parse(this.responseText);
                 document.getElementById("content").innerHTML = that.buildNodeText(myObj.root, 0);
             }
         };
@@ -77,8 +77,8 @@ class MapBuilder {
     }
 
     buildNodeText(node:mapNode, depth:number):string {
-        var str:string = "";
-        for (var i=0; i < depth; i++) {
+        let str:string = "";
+        for (let i=0; i < depth; i++) {
             str += "&nbsp;&nbsp;&nbsp;&nbsp;";
         }
         if (node.page == undefined) {
@@ -89,7 +89,7 @@ class MapBuilder {
                 str += " " + node.languages[i];
             }
             str += " | format:";
-            for (var i=0; i < node.formats.length; i++) {
+            for (let i=0; i < node.formats.length; i++) {
                 str += " " + node.formats[i];
             }
             str += "\" target=\"_self\"><span class=\"linktitle\">" + escapeHtml(node.title) +"</span></A>";
@@ -99,7 +99,7 @@ class MapBuilder {
         } else {
             str += "<A onclick=\"MapBuilder.prototype.handleNodeClick(" 
                     + this.divCounter
-                    + ")\" href=\"#\" id=\""
+                    + ")\" id=\""
                     + MapBuilder.toggleDivName + this.divCounter
                     + "\">" 
                     + MapBuilder.openedNodeSymbol
@@ -107,7 +107,7 @@ class MapBuilder {
                     + MapBuilder.spanDivName + this.divCounter
                     + "\">"
             this.divCounter++;
-            for (var i=0; i<node.children.length; i++) {
+            for (let i=0; i<node.children.length; i++) {
                 str += this.buildNodeText(node.children[i], depth + 1);
             }
             str += "</SPAN>";
@@ -240,8 +240,4 @@ function initialize():void {
   }
 }
 
-//var builder:MapBuilder = new MapBuilder();
-//builder.buildMap();
-
 window.onload=initialize;
-
