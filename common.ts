@@ -18,14 +18,28 @@ interface mapNode {
     children:mapNode[];
 }
 
-/*
-var authorsRequest = new XMLHttpRequest();
-authorsRequest.onreadystatechange = function() {
-    if (this.readyState == 4 && this.status == 200) {
-        var myObj = JSON.parse(this.responseText);
-        var fullString:string = "";
-        for (var i = 0; i < myObj.authors.length; i++) {
-            var author:Author = myObj.authors[i];
+class ContentBuilder {
+
+    constructor() {
+    }
+
+    buildContent():void {
+        const authorsRequest = new XMLHttpRequest();
+        const that:ContentBuilder = this;
+        authorsRequest.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                const myObj = JSON.parse(this.responseText);
+                document.getElementById("content").innerHTML = that.buildContentText(myObj.authors);
+            }
+        };
+        authorsRequest.open("GET", "../content_tables/author.json");
+        authorsRequest.send();        
+    }
+
+    buildContentText(authors:Author[]):string {
+        let fullString:string = "";
+        for (let i = 0; i < authors.length; i++) {
+            const author:Author = authors[i];
             fullString += "namePrefix = " + author.namePrefix + "<BR/>"
                         + "firstName = " + author.firstName + "<BR/>"
                         + "middleName = " + author.middleName + "<BR/>"
@@ -34,12 +48,9 @@ authorsRequest.onreadystatechange = function() {
                         + "givenName = " + author.givenName + "<BR/>"
                         + "<BR/>";
         }
-        document.getElementById("demo").innerHTML = fullString;
+        return fullString;
     }
-};
-authorsRequest.open("GET", "../content_tables/author.json");
-authorsRequest.send();
-*/
+}
 
 class MapBuilder {
 
@@ -65,7 +76,7 @@ class MapBuilder {
         mapRequest.send();    
     }
 
-    public handleNodeClick(index:number): boolean {
+    public handleNodeClick(index:number):boolean {
         if ($("#" + MapBuilder.spanDivName + index).is(":visible")) {
             $("#" + MapBuilder.spanDivName + index).hide();
             document.getElementById(MapBuilder.toggleDivName + index).innerHTML = MapBuilder.closedNodeSymbol;
