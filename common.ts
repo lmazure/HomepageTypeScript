@@ -10,6 +10,22 @@ interface Author {
     givenName:string;
 }
 
+interface Link {
+    url:string;
+    title:string;
+    subtitle:string;
+    duration:number[];
+    formats:string[];
+    languages:string[];
+}
+
+interface Article {
+    links:Link[];
+    date:number[];
+    authors:number[];
+    referringPage:string;
+}
+
 interface mapNode {
     title:string;
     page:string;
@@ -24,19 +40,37 @@ class ContentBuilder {
     }
 
     buildContent():void {
+        this.getAuthors();
+    }
+
+    private getAuthors():void {
         const authorsRequest = new XMLHttpRequest();
         const that:ContentBuilder = this;
         authorsRequest.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
-                const myObj = JSON.parse(this.responseText);
-                document.getElementById("content").innerHTML = that.buildContentText(myObj.authors);
+                const myObj:any = JSON.parse(this.responseText);
+                //document.getElementById("content").innerHTML = that.buildContentText(myObj.authors);
+                that.getArticles();
             }
         };
         authorsRequest.open("GET", "../content_tables/author.json");
         authorsRequest.send();        
     }
 
-    buildContentText(authors:Author[]):string {
+    private getArticles(): void {
+        const articlesRequest = new XMLHttpRequest();
+        const that:ContentBuilder = this;
+        articlesRequest.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                const myObj:any = JSON.parse(this.responseText);
+                document.getElementById("content").innerHTML = that.buildContentText(myObj.articles);
+            }
+        };
+        articlesRequest.open("GET", "../content_tables/article.json");
+        articlesRequest.send();        
+    }
+
+    /*private buildContentText(authors:Author[]):string {
         let fullString:string = "";
         for (let i = 0; i < authors.length; i++) {
             const author:Author = authors[i];
@@ -49,7 +83,30 @@ class ContentBuilder {
                         + "<BR/>";
         }
         return fullString;
+    }*/
+
+    private buildContentText(articles:Article[]):string {
+        let fullString:string = "";
+        for (let i = 0; i < articles.length; i++) {
+            const article:Article = articles[i];
+            for (let j=0; j < article.links.length; j++) {
+                const link:Link = article.links[j];                
+                fullString += "link n°" + j + "<BR/>"
+                            + "url = " + link.url + "<BR/>"
+                            + "title = " + link.title + "<BR/>"
+                            + "subtitle = " + link.subtitle + "<BR/>"
+                            + "duration = " + ((link.duration === undefined) ? undefined : link.duration.join()) + "<BR/>"
+                            + "formats = " + link.formats.join() + "<BR/>"
+                            + "languages = " + link.languages.join() + "<BR/>";
+            }
+            fullString += "date = " + ((article.date === undefined) ? undefined : article.date.join()) + "<BR/>"
+                        + "authors = " + ((article.authors === undefined) ? undefined : article.authors.join()) + "<BR/>"
+                        + "referringPage = " + article.referringPage + "<BR/>"
+                        + "<BR/>"
+        }
+        return fullString;
     }
+
 }
 
 class MapBuilder {
@@ -68,7 +125,7 @@ class MapBuilder {
         const that:MapBuilder = this;
         mapRequest.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
-                const myObj = JSON.parse(this.responseText);
+                const myObj:any = JSON.parse(this.responseText);
                 document.getElementById("content").innerHTML = that.buildNodeText(myObj.root, 0);
             }
         };
@@ -87,7 +144,7 @@ class MapBuilder {
         return(false);
     }
 
-    buildNodeText(node:mapNode, depth:number):string {
+    private buildNodeText(node:mapNode, depth:number):string {
         let str:string = "";
         for (let i=0; i < depth; i++) {
             str += "&nbsp;&nbsp;&nbsp;&nbsp;";
@@ -217,7 +274,7 @@ function do_reference(str) {
     } else if ( a[0] == "j2se" && a.length == 2 ) {
         url = "http://java.sun.com/j2se/1.5.0/docs/api/" + a[1].replace(/\./g,"/") + ".html";
     } else if ( a[0] == "j2se" && a.length == 3 ) {
-        url = "http://java.sun.com/j2se/1.5.0/docs/api/" + a[1].replace(/\./g,"/") + ".html#" + escape(a[2]);
+        url = "http://java.sun.com/j2se/1.5.0/docs/api/" + a[1].replace(/\./g,"/") + ".html#" + escapeHtml(a[2]);
     } else if ( a[0] == "clearcase" && a.length == 2 ) {
         url = "http://www.agsrhichome.bnl.gov/Controls/doc/ClearCaseEnv/v4.0doc/cpf_4.0/ccase_ux/ccref/" + a[1] + ".html";
     }
