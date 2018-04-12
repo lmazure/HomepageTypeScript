@@ -22,7 +22,7 @@ interface Link {
 interface Article {
     links:Link[];
     date:number[];
-    authors:number[];
+    authorIndexes:number[];
     referringPage:string;
 }
 
@@ -100,7 +100,7 @@ class ContentBuilder {
                             + "languages = " + link.languages.join() + "<BR/>";
             }
             fullString += "date = " + ((article.date === undefined) ? undefined : article.date.join()) + "<BR/>"
-                        + "authors = " + ((article.authors === undefined) ? undefined : article.authors.join()) + "<BR/>"
+                        + "authorIndexes = " + ((article.authorIndexes === undefined) ? undefined : article.authorIndexes.join()) + "<BR/>"
                         + "referringPage = " + article.referringPage + "<BR/>"
                         + "<BR/>"
         }
