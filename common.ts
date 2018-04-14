@@ -82,8 +82,7 @@ class ContentBuilder {
     }
 
     private postprocessData():void {
-        for (let i = 0; i < this.articles.length; i++) {
-            const article:Article = this.articles[i];
+        for (let article of this.articles) {
             if (article.authorIndexes !== undefined) {
                 article.authors = article.authorIndexes.map(i => this.authors[i]);
                 for (let j=0; j < article.authors.length; j++) {
@@ -99,25 +98,55 @@ class ContentBuilder {
     }
 
     private buildContentText():string {
-        let fullString:string = "";
-        for (let i = 0; i < this.articles.length; i++) {
-            const article:Article = this.articles[i];
-            for (let j=0; j < article.links.length; j++) {
-                const link:Link = article.links[j];                
-                fullString += "link n°" + j + "<BR/>"
-                            + "url = " + link.url + "<BR/>"
-                            + "title = " + link.title + "<BR/>"
-                            + "subtitle = " + link.subtitle + "<BR/>"
-                            + "duration = " + ((link.duration === undefined) ? undefined : ContentBuilder.durationToString(link.duration)) + "<BR/>"
-                            + "formats = " + link.formats.join() + "<BR/>"
-                            + "languages = " + link.languages.join() + "<BR/>";
+        let fullString:string = "number of articles: "
+                            + this.articles.length
+                            + "<table class=\"table\">"
+                            + "<tr>"
+                            + "<th>title</th><th>authors</a></th><th>date</th><th>URL</a></th><th>language</th><th>format</th><th>duration</th><th>referring page</th>"
+                            + "</tr>";
+        for (let article of this.articles) {
+            let j:number = 0;
+            let articleString = "<tr>"
+                                + "<td>"
+                                + escapeHtml(article.links[0].title)
+                                + ((article.links[0].subtitle !== undefined) ? ("<br/><i>" + escapeHtml(article.links[0].subtitle) + "</i><br>") : "")
+                                + "</td><td>"
+                                + ((article.authors == undefined) ? "" : article.authors.map(a => ContentBuilder.authorToString(a)).join("<br>"))
+                                + "</td><td>"
+                                + ((article.date === undefined) ? "" : ContentBuilder.dateToString(article.date))
+                                + "</td><td>";
+            let flag:boolean = false;
+            for (let link of article.links) {
+                if (flag) {
+                    articleString += "<br/>";
+                } else {
+                    flag = true;
+                }
+                articleString += "<a href=\""
+                            + link.url
+                            + "\" title=\"language: "
+                            + link.languages.join(" ")
+                            + " | format: "
+                            + link.formats.join()
+                            + ((link.duration === undefined) ?  "" : (" | duration: " + ContentBuilder.durationToString(link.duration)))
+                            + "\" target=\"_blank\"><span class=\"linktitle\">"
+                            + escapeHtml(link.url)
+                            + "</span></a>";
             }
-            fullString += "date = " + ((article.date === undefined) ? undefined : ContentBuilder.dateToString(article.date)) + "<BR/>"
-                        + "authorIndexes = " + ((article.authorIndexes === undefined) ? undefined : article.authorIndexes.join()) + "<BR/>"
-                        + "authors = " + ((article.authors === undefined) ? undefined : article.authors.map(a => ContentBuilder.authorToString(a)).join()) + "<BR/>"
-                        + "page = " + article.page + "<BR/>"
-                        + "<BR/>"
+            articleString += "</td><td>"
+                            + article.links[0].languages.join("<br/>")
+                            + "</td><td>"
+                            + article.links[0].formats.join("<br/>")
+                            + "</td><td>"
+                            + ((article.links[0].duration === undefined) ?  "" : ContentBuilder.durationToString(article.links[0].duration))
+                            + "</td><td><a href=\"../"
+                            + article.page
+                            + "\" title=\"language: en | format: HTML \" target=\"_self\"><span class=\"linktitle\">"
+                            + article.page
+                            + "</span></a></td></tr>";
+            fullString += articleString;
         }
+        fullString += "</table>";
         return fullString;
     }
 
@@ -150,14 +179,14 @@ class ContentBuilder {
 
     private static dayToString(day:number):string {
         switch (day) {
-            case 1: return "1st";
-            case 21: return "21st";
-            case 31: return "31st";
-            case 2: return "2nd";
-            case 22: return "22nd";
-            case 3: return "3rd";
-            case 23: return "23rd";
-            default: return "" + day + "th";
+            case 1: return "1<sup>st</sup>";
+            case 21: return "21<sup>st</sup>";
+            case 31: return "31<sup>st</sup>";
+            case 2: return "2<sup>nd</sup>";
+            case 22: return "22<sup>nd</sup>";
+            case 3: return "3<sup>rd</sup>";
+            case 23: return "23<sup>rd</sup>";
+            default: return "" + day + "<sup>th</sup>";
         }
     }
 
@@ -179,10 +208,12 @@ class ContentBuilder {
         throw "illegal call to monthToString";
     }
 
+    // the first string is an HTML string
+    // the second string is a raw string
     private static appendSpaceAndPostfixToString(str:string, postfix:string|undefined):string {
         if (postfix !== undefined) {
             if (str.length > 0) {
-                return str + " " + postfix;
+                return str + " " + escapeHtml(postfix);
             } else {
                 return postfix;
             }
@@ -258,8 +289,8 @@ class MapBuilder {
                     + MapBuilder.spanDivName + this.divCounter
                     + "\">"
             this.divCounter++;
-            for (let i=0; i<node.children.length; i++) {
-                str += this.buildNodeText(node.children[i], depth + 1);
+            for (let child of node.children) {
+                str += this.buildNodeText(child, depth + 1);
             }
             str += "</SPAN>";
         }
