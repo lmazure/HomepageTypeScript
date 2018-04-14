@@ -8,6 +8,7 @@ interface Author {
     lastName:string;
     nameSuffix:string;
     givenName:string;
+    articles:Article[]|undefined;
 }
 
 interface Link {
@@ -22,8 +23,9 @@ interface Link {
 interface Article {
     links:Link[];
     date:number[];
-    authorIndexes:number[];
-    referringPage:string;
+    authorIndexes:number[]|undefined;
+    authors:Author[]|undefined;
+    page:string;
 }
 
 interface mapNode {
@@ -35,6 +37,9 @@ interface mapNode {
 }
 
 class ContentBuilder {
+
+    authors:Author[];
+    articles:Article[];
 
     constructor() {
     }
@@ -49,7 +54,7 @@ class ContentBuilder {
         authorsRequest.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
                 const myObj:any = JSON.parse(this.responseText);
-                //document.getElementById("content").innerHTML = that.buildContentText(myObj.authors);
+                that.authors = myObj.authors;
                 that.getArticles();
             }
         };
@@ -63,50 +68,128 @@ class ContentBuilder {
         articlesRequest.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
                 const myObj:any = JSON.parse(this.responseText);
-                document.getElementById("content").innerHTML = that.buildContentText(myObj.articles);
+                that.articles = myObj.articles;
+                that.createTable();
             }
         };
         articlesRequest.open("GET", "../content_tables/article.json");
         articlesRequest.send();        
     }
 
-    /*private buildContentText(authors:Author[]):string {
-        let fullString:string = "";
-        for (let i = 0; i < authors.length; i++) {
-            const author:Author = authors[i];
-            fullString += "namePrefix = " + author.namePrefix + "<BR/>"
-                        + "firstName = " + author.firstName + "<BR/>"
-                        + "middleName = " + author.middleName + "<BR/>"
-                        + "lastName = " + author.lastName + "<BR/>"
-                        + "nameSuffix = " + author.nameSuffix + "<BR/>"
-                        + "givenName = " + author.givenName + "<BR/>"
-                        + "<BR/>";
-        }
-        return fullString;
-    }*/
+    private createTable():void {
+        this.postprocessData();
+        document.getElementById("content").innerHTML = this.buildContentText();
+    }
 
-    private buildContentText(articles:Article[]):string {
+    private postprocessData():void {
+        for (let i = 0; i < this.articles.length; i++) {
+            const article:Article = this.articles[i];
+            if (article.authorIndexes !== undefined) {
+                article.authors = article.authorIndexes.map(i => this.authors[i]);
+                for (let j=0; j < article.authors.length; j++) {
+                    const author:Author = article.authors[j];
+                    if (author.articles === undefined) {
+                        author.articles = [ article ];
+                    } else {
+                        author.articles.push(article);
+                    }
+                }    
+            }
+        }
+    }
+
+    private buildContentText():string {
         let fullString:string = "";
-        for (let i = 0; i < articles.length; i++) {
-            const article:Article = articles[i];
+        for (let i = 0; i < this.articles.length; i++) {
+            const article:Article = this.articles[i];
             for (let j=0; j < article.links.length; j++) {
                 const link:Link = article.links[j];                
                 fullString += "link n°" + j + "<BR/>"
                             + "url = " + link.url + "<BR/>"
                             + "title = " + link.title + "<BR/>"
                             + "subtitle = " + link.subtitle + "<BR/>"
-                            + "duration = " + ((link.duration === undefined) ? undefined : link.duration.join()) + "<BR/>"
+                            + "duration = " + ((link.duration === undefined) ? undefined : ContentBuilder.durationToString(link.duration)) + "<BR/>"
                             + "formats = " + link.formats.join() + "<BR/>"
                             + "languages = " + link.languages.join() + "<BR/>";
             }
-            fullString += "date = " + ((article.date === undefined) ? undefined : article.date.join()) + "<BR/>"
+            fullString += "date = " + ((article.date === undefined) ? undefined : ContentBuilder.dateToString(article.date)) + "<BR/>"
                         + "authorIndexes = " + ((article.authorIndexes === undefined) ? undefined : article.authorIndexes.join()) + "<BR/>"
-                        + "referringPage = " + article.referringPage + "<BR/>"
+                        + "authors = " + ((article.authors === undefined) ? undefined : article.authors.map(a => ContentBuilder.authorToString(a)).join()) + "<BR/>"
+                        + "page = " + article.page + "<BR/>"
                         + "<BR/>"
         }
         return fullString;
     }
 
+    private static authorToString(author:Author):string {
+        let fullString:string = this.appendSpaceAndPostfixToString("", author.namePrefix);
+        fullString = this.appendSpaceAndPostfixToString(fullString, author.firstName);
+        fullString = this.appendSpaceAndPostfixToString(fullString, author.middleName);
+        fullString = this.appendSpaceAndPostfixToString(fullString, author.lastName);
+        fullString = this.appendSpaceAndPostfixToString(fullString, author.nameSuffix);
+        return this.appendSpaceAndPostfixToString(fullString, author.givenName);
+    }
+
+    private static durationToString(duration:number[]):string {
+        switch (duration.length) {
+            case 3: return duration[0] + "h " + duration[1] + "m " + duration[2] + "s";
+            case 2: return duration[0] + "m " + duration[1] + "s";
+            case 1: return duration[0] + "s";
+        }
+        throw "illegal call to durationToString";
+    }
+
+    private static dateToString(date:number[]):string {
+        switch (date.length) {
+            case 3: return ContentBuilder.monthToString(date[1]) + " " + ContentBuilder.dayToString(date[2]) +", " + date[0];
+            case 2: return ContentBuilder.monthToString(date[1]) + " " + date[0];
+            case 1: return "" + date[0];
+        }
+        throw "illegal call to durationToString";
+    }
+
+    private static dayToString(day:number):string {
+        switch (day) {
+            case 1: return "1st";
+            case 21: return "21st";
+            case 31: return "31st";
+            case 2: return "2nd";
+            case 22: return "22nd";
+            case 3: return "3rd";
+            case 23: return "23rd";
+            default: return "" + day + "th";
+        }
+    }
+
+    private static monthToString(month:number):string {
+        switch (month) {
+            case 1: return "January";
+            case 2: return "February";
+            case 3: return "March";
+            case 4: return "April";
+            case 5: return "May";
+            case 6: return "June";
+            case 7: return "July";
+            case 8: return "August";
+            case 9: return "September";
+            case 10: return "October";
+            case 11: return "November";
+            case 12: return "December";
+        }
+        throw "illegal call to monthToString";
+    }
+
+    private static appendSpaceAndPostfixToString(str:string, postfix:string|undefined):string {
+        if (postfix !== undefined) {
+            if (str.length > 0) {
+                return str + " " + postfix;
+            } else {
+                return postfix;
+            }
+        } else {
+            return str;
+        }
+    }
 }
 
 class MapBuilder {
@@ -260,9 +343,9 @@ function do_search() {
 // j2se/<class>/<method>
 // clearcase/command
 
-function do_reference(str) {
-    var a:string = str.split("/");
-    var url:string = "?";
+function do_reference(str:string) {
+    const a:string[] = str.split("/");
+    let url:string = "?";
     if ( a[0] == "rfc" ) {
         url = "http://www.ietf.org/rfc/rfc"+a[1]+".txt";
     } else if ( a[0] == "man" && a[1] == "linux" ) {
