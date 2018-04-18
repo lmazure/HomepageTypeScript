@@ -18,6 +18,8 @@ interface Link {
     duration:number[];
     formats:string[];
     languages:string[];
+    status:string;
+    protection:string;
 }
 
 interface Article {
@@ -85,8 +87,7 @@ class ContentBuilder {
         for (let article of this.articles) {
             if (article.authorIndexes !== undefined) {
                 article.authors = article.authorIndexes.map(i => this.authors[i]);
-                for (let j=0; j < article.authors.length; j++) {
-                    const author:Author = article.authors[j];
+                for (let author of article.authors) {
                     if (author.articles === undefined) {
                         author.articles = [ article ];
                     } else {
@@ -131,7 +132,9 @@ class ContentBuilder {
                             + ((link.duration === undefined) ?  "" : (" | duration: " + ContentBuilder.durationToString(link.duration)))
                             + "\" target=\"_blank\"><span class=\"linktitle\">"
                             + escapeHtml(link.url)
-                            + "</span></a>";
+                            + "</span></a>"
+                            + ContentBuilder.protectionToString(link.protection)
+                            + ContentBuilder.statusToString(link.status);
             }
             articleString += "</td><td>"
                             + article.links[0].languages.join("<br/>")
@@ -220,6 +223,30 @@ class ContentBuilder {
         } else {
             return str;
         }
+    }
+
+    private static protectionToString(protection:string):string {
+        if ( protection === undefined) {
+            return "";
+        }
+        if (protection === "free_registration") {
+            return "<span title=\"free registration required\"> &#x1f193;</span>";            
+        }
+        if (protection === "payed_registration") {
+            return "<span title=\"payed registration required\"> &#x1f4b0;</span>";            
+        }
+        throw "illegal call to protectionToString (unknown value = \"" + protection + "\")";
+    }
+
+    
+    private static statusToString(protection:string):string {
+        if ( protection === undefined) {
+            return "";
+        }
+        if ((protection === "dead") || (protection === "zombie")) {
+            return "<span title=\"dead link\"> &#x2020;</span>";            
+        }
+        throw "illegal call to protectionToString (unknown value = \"" + protection + "\")";
     }
 }
 
