@@ -310,7 +310,7 @@ class MapBuilder {
                     + this.divCounter
                     + ")\" id=\""
                     + MapBuilder.toggleDivName + this.divCounter
-                    + "\">" 
+                    + "\"  style=\"cursor: pointer\">" 
                     + MapBuilder.openedNodeSymbol
                     + "</A><BR/><SPAN id=\""
                     + MapBuilder.spanDivName + this.divCounter
@@ -335,10 +335,10 @@ function escapeHtml(unsafe:string):string {
  }
 
 function create_index() {
-    var letters:string = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    var w:number = 100.0/letters.length;
-    var str:string = '<table id="navigationBar" width="100%"><TR>';
-    for (var i:number = 0; i < letters.length; i++ ) {
+    let letters:string = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    let w:number = 100.0/letters.length;
+    let str:string = '<table id="navigationBar" width="100%"><TR>';
+    for (let i:number = 0; i < letters.length; i++ ) {
         str += '<td align="center" width="'
                + w
                + '%"><a href="#'
