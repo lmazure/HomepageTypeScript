@@ -38,6 +38,80 @@ interface mapNode {
     children:mapNode[];
 }
 
+class HtmlString {
+
+    html:string;
+
+    private constructor() {
+        this.html = "";
+    }
+
+    public static buildEmpty(): HtmlString {
+        const that:HtmlString = new HtmlString();
+        return that;
+    }
+
+    public static buildFromString(str:string | HtmlString): HtmlString {
+        const that:HtmlString = new HtmlString();
+        that.appendString(str);
+        return that;
+    }
+
+    public static buildFromTag(tag:string, content:string | HtmlString, ...attributes:string[]) {
+        const that:HtmlString = new HtmlString();
+        that.performTagAppending(tag, content, attributes);
+        return that;
+    }
+
+    public getHtml():string {
+        return this.html;
+    }
+
+    public isEmpty():boolean {
+        return (this.html.length == 0)
+    }
+
+    public appendString(str:string | HtmlString):HtmlString {
+        this.html += (typeof str === "string") ? HtmlString.escape(str) : (str as HtmlString).getHtml();
+        return this;
+    }
+
+    public appendEmptyTag(tag:string):HtmlString {
+        this.html += "<" + tag + ">";
+        return this;
+    }
+
+    public appendTag(tag:string, content:string | HtmlString, ...attributes:string[]):HtmlString {
+        this.performTagAppending(tag, content, attributes);
+        return this;
+    }
+
+    private performTagAppending(tag:string, content:string | HtmlString, attributes:string[]):void {
+        if ((attributes.length % 2) != 0) {
+            throw "illegal call to HtmlString.performTagAppending()"
+        }
+        let str = "<" + tag;
+        for (let i:number =0; i<attributes.length; i += 2) {
+            str += " " + attributes[i] + "=\"" + attributes[i + 1] + "\"";
+        }
+        str += ">"
+                + ((typeof content === "string") ? HtmlString.escape(content) : (content as HtmlString).getHtml())
+                + "</"
+                + tag
+                +">";
+        this.html += str;
+    }
+
+    private static escape(unsafe:string):string {
+        return unsafe
+             .replace(/&/g, "&amp;")
+             .replace(/</g, "&lt;")
+             .replace(/>/g, "&gt;")
+             .replace(/"/g, "&quot;")
+             .replace(/'/g, "&#039;");
+     }
+}
+
 class ContentBuilder {
 
     authors:Author[];
@@ -80,7 +154,7 @@ class ContentBuilder {
 
     private createTable():void {
         this.postprocessData();
-        document.getElementById("content").innerHTML = this.buildContentText();
+        document.getElementById("content").innerHTML = this.buildContentText().getHtml();
     }
 
     private postprocessData():void {
@@ -98,68 +172,132 @@ class ContentBuilder {
         }
     }
 
-    private buildContentText():string {
-        let fullString:string = "number of articles: "
-                            + this.articles.length
-                            + "<table class=\"table\">"
-                            + "<tr>"
-                            + "<th>title</th><th>authors</a></th><th>date</th><th>URL</a></th><th>language</th><th>format</th><th>duration</th><th>referring page</th>"
-                            + "</tr>";
+    private buildContentText():HtmlString {
+        const cells:HtmlString = HtmlString.buildFromTag("th", "title")
+                                    .appendTag("th"," authors")
+                                    .appendTag("th", "date")
+                                    .appendTag("th", "URL")
+                                    .appendTag("th", "language")
+                                    .appendTag("th", "format")
+                                    .appendTag("th", "duration")
+                                    .appendTag("th", "referring page");
+        const row:HtmlString = HtmlString.buildFromTag("tr", cells);
         for (let article of this.articles) {
-            let j:number = 0;
-            let articleString = "<tr>"
-                                + "<td>"
-                                + escapeHtml(article.links[0].title)
-                                + ((article.links[0].subtitle !== undefined) ? ("<br/><i>" + escapeHtml(article.links[0].subtitle) + "</i><br>") : "")
-                                + "</td><td>"
-                                + ((article.authors == undefined) ? "" : article.authors.map(a => ContentBuilder.authorToString(a)).join("<br>"))
-                                + "</td><td>"
-                                + ((article.date === undefined) ? "" : ContentBuilder.dateToString(article.date))
-                                + "</td><td>";
-            let flag:boolean = false;
-            for (let link of article.links) {
-                if (flag) {
-                    articleString += "<br/>";
-                } else {
-                    flag = true;
-                }
-                articleString += "<a href=\""
-                            + link.url
-                            + "\" title=\"language: "
-                            + link.languages.join(" ")
-                            + " | format: "
-                            + link.formats.join()
-                            + ((link.duration === undefined) ?  "" : (" | duration: " + ContentBuilder.durationToString(link.duration)))
-                            + "\" target=\"_blank\"><span class=\"linktitle\">"
-                            + escapeHtml(link.url)
-                            + "</span></a>"
-                            + ContentBuilder.protectionToString(link.protection)
-                            + ContentBuilder.statusToString(link.status);
+            const title:HtmlString = HtmlString.buildFromString(article.links[0].title);
+            if (article.links[0].subtitle !== undefined) {
+                title.appendEmptyTag("br")
+                    .appendString(article.links[0].subtitle);
             }
-            articleString += "</td><td>"
-                            + article.links[0].languages.join("<br/>")
-                            + "</td><td>"
-                            + article.links[0].formats.join("<br/>")
-                            + "</td><td>"
-                            + ((article.links[0].duration === undefined) ?  "" : ContentBuilder.durationToString(article.links[0].duration))
-                            + "</td><td><a href=\"../"
-                            + article.page
-                            + "\" title=\"language: en | format: HTML \" target=\"_self\"><span class=\"linktitle\">"
-                            + article.page
-                            + "</span></a></td></tr>";
-            fullString += articleString;
+            const authors:HtmlString = HtmlString.buildEmpty();
+            if (article.authors !== undefined) {
+                let flag:boolean = false;
+                for (let a of article.authors) {
+                    if (flag) {
+                        authors.appendEmptyTag("br");
+                    } else {
+                        flag = true;
+                    }
+                    authors.appendString(ContentBuilder.authorToHtmlString(a));
+                }
+            }
+            const date:HtmlString = (article.date !== undefined)
+                ? HtmlString.buildFromString(ContentBuilder.dateToHtmlString(article.date))
+                : HtmlString.buildEmpty();
+            const urls:HtmlString = HtmlString.buildEmpty();
+            {
+                let flag:boolean = false;
+                for (let l of article.links) {
+                    if (flag) {
+                        urls.appendEmptyTag("br");
+                    } else {
+                        flag = true;
+                    }
+                    urls.appendTag(
+                        "a",
+                        l.url,
+                        "href", l.url,
+                        "title",
+                            "language: "
+                            + l.languages.join(" ")
+                            + " | format: "
+                            + l.formats.join(" ")
+                            + ((l.duration === undefined)
+                                ? ""
+                                : (" | duration: " + ContentBuilder.durationToString(l.duration))),
+                        "target", "_blank"
+                    );
+                    if (l.protection !== undefined) {
+                        urls.appendString(ContentBuilder.protectionToHtmlString(l.protection));
+                    }
+                    if (l.status !== undefined) {
+                        urls.appendString(ContentBuilder.statusToHtmlString(l.status));
+                    }
+                }
+            }            
+            const languages:HtmlString = HtmlString.buildEmpty();
+            {
+                let flag:boolean = false;
+                for (let l of article.links[0].languages) {
+                    if (flag) {
+                        languages.appendEmptyTag("br");
+                    } else {
+                        flag = true;
+                    }
+                    languages.appendString(l);
+                }                
+            }
+            const formats:HtmlString = HtmlString.buildEmpty();
+            {
+                let flag:boolean = false;
+                for (let l of article.links[0].formats) {
+                    if (flag) {
+                        formats.appendEmptyTag("br");
+                    } else {
+                        flag = true;
+                    }
+                    formats.appendString(l);
+                }                
+            }
+            const referringPage:HtmlString =
+                HtmlString.buildFromTag(
+                    "a",
+                    article.page,
+                    "href", "../" + article.page,
+                    "title", "language: en | format: HTML", //TODO do not hardcode language and format
+                    "target", "_self"
+                );
+            const duration:HtmlString = (article.links[0].duration !== undefined)
+                ? ContentBuilder.durationToHtmlString(article.links[0].duration)
+                : HtmlString.buildEmpty();
+            const cells:HtmlString = HtmlString
+                                    .buildFromTag("td", title)
+                                    .appendTag("td", authors)
+                                    .appendTag("td", date)
+                                    .appendTag("td", urls)
+                                    .appendTag("td", languages)
+                                    .appendTag("td", formats)
+                                    .appendTag("td", duration)
+                                    .appendTag("td", referringPage);
+            row.appendTag("tr",cells);
         }
-        fullString += "</table>";
-        return fullString;
+        const table:HtmlString = HtmlString.buildFromTag("table", row , "class", "table");
+        const full:HtmlString = HtmlString.buildFromString("number of articles: " + this.articles.length)
+                                        .appendString(table);
+        return full;
     }
 
-    private static authorToString(author:Author):string {
-        let fullString:string = this.appendSpaceAndPostfixToString("", author.namePrefix);
-        fullString = this.appendSpaceAndPostfixToString(fullString, author.firstName);
-        fullString = this.appendSpaceAndPostfixToString(fullString, author.middleName);
-        fullString = this.appendSpaceAndPostfixToString(fullString, author.lastName);
-        fullString = this.appendSpaceAndPostfixToString(fullString, author.nameSuffix);
-        return this.appendSpaceAndPostfixToString(fullString, author.givenName);
+    private static authorToHtmlString(author:Author):HtmlString {
+        let fullString:HtmlString = HtmlString.buildEmpty();
+        fullString = this.appendSpaceAndPostfixToHtmlString(fullString, author.namePrefix);
+        fullString = this.appendSpaceAndPostfixToHtmlString(fullString, author.firstName);
+        fullString = this.appendSpaceAndPostfixToHtmlString(fullString, author.middleName);
+        fullString = this.appendSpaceAndPostfixToHtmlString(fullString, author.lastName);
+        fullString = this.appendSpaceAndPostfixToHtmlString(fullString, author.nameSuffix);
+        return this.appendSpaceAndPostfixToHtmlString(fullString, author.givenName);
+    }
+
+    private static durationToHtmlString(duration:number[]):HtmlString {
+        return HtmlString.buildFromString(ContentBuilder.durationToString(duration));
     }
 
     private static durationToString(duration:number[]):string {
@@ -168,85 +306,95 @@ class ContentBuilder {
             case 2: return duration[0] + "m " + duration[1] + "s";
             case 1: return duration[0] + "s";
         }
-        throw "illegal call to durationToString";
+        throw "illegal call to buildContentText.durationToString() (duration.length=" + duration.length + ")";
     }
 
-    private static dateToString(date:number[]):string {
+    private static dateToHtmlString(date:number[]):HtmlString {
         switch (date.length) {
-            case 3: return ContentBuilder.monthToString(date[1]) + " " + ContentBuilder.dayToString(date[2]) +", " + date[0];
-            case 2: return ContentBuilder.monthToString(date[1]) + " " + date[0];
-            case 1: return "" + date[0];
+            case 3: return ContentBuilder
+                        .monthToHtmlString(date[1])
+                        .appendString(" ")
+                        .appendString(ContentBuilder.dayToHtmlString(date[2]))
+                        .appendString(", " + date[0]);
+            case 2: return ContentBuilder
+                        .monthToHtmlString(date[1])
+                        .appendString(" " + date[0]);
+            case 1: return HtmlString
+                        .buildFromString("" + date[0]);
         }
-        throw "illegal call to durationToString";
+        throw "illegal call to buildContentText.dateToHtmlString()";
     }
 
-    private static dayToString(day:number):string {
+    private static dayToHtmlString(day:number):HtmlString {
         switch (day) {
-            case 1: return "1<sup>st</sup>";
-            case 21: return "21<sup>st</sup>";
-            case 31: return "31<sup>st</sup>";
-            case 2: return "2<sup>nd</sup>";
-            case 22: return "22<sup>nd</sup>";
-            case 3: return "3<sup>rd</sup>";
-            case 23: return "23<sup>rd</sup>";
-            default: return "" + day + "<sup>th</sup>";
+            case  1: return HtmlString.buildFromString("1").appendTag("sup", "st");
+            case 21: return HtmlString.buildFromString("21").appendTag("sup", "st");
+            case 31: return HtmlString.buildFromString("31").appendTag("sup", "st");
+            case  2: return HtmlString.buildFromString("2").appendTag("sup", "nd");
+            case 22: return HtmlString.buildFromString("22").appendTag("sup", "nd");
+            case  3: return HtmlString.buildFromString("3").appendTag("sup", "rd");
+            case 23: return HtmlString.buildFromString("23").appendTag("sup", "rd");
+            default: return HtmlString.buildFromString(" " + day).appendTag("sup", "th");
         }
     }
 
-    private static monthToString(month:number):string {
+    private static monthToHtmlString(month:number):HtmlString {
         switch (month) {
-            case 1: return "January";
-            case 2: return "February";
-            case 3: return "March";
-            case 4: return "April";
-            case 5: return "May";
-            case 6: return "June";
-            case 7: return "July";
-            case 8: return "August";
-            case 9: return "September";
-            case 10: return "October";
-            case 11: return "November";
-            case 12: return "December";
+            case  1: return HtmlString.buildFromString("January");
+            case  2: return HtmlString.buildFromString("February");
+            case  3: return HtmlString.buildFromString("March");
+            case  4: return HtmlString.buildFromString("April");
+            case  5: return HtmlString.buildFromString("May");
+            case  6: return HtmlString.buildFromString("June");
+            case  7: return HtmlString.buildFromString("July");
+            case  8: return HtmlString.buildFromString("August");
+            case  9: return HtmlString.buildFromString("September");
+            case 10: return HtmlString.buildFromString("October");
+            case 11: return HtmlString.buildFromString("November");
+            case 12: return HtmlString.buildFromString("December");
         }
-        throw "illegal call to monthToString";
+        throw "illegal call to buildContentText.monthToHtmlString()";
     }
 
-    // the first string is an HTML string
-    // the second string is a raw string
-    private static appendSpaceAndPostfixToString(str:string, postfix:string|undefined):string {
+    private static appendSpaceAndPostfixToHtmlString(str:HtmlString, postfix:string|undefined):HtmlString {
         if (postfix !== undefined) {
-            if (str.length > 0) {
-                return str + " " + escapeHtml(postfix);
+            if (str.isEmpty()) {
+                return str.appendString(postfix);
             } else {
-                return postfix;
+                return str.appendString(" " + postfix);
             }
         } else {
             return str;
         }
     }
 
-    private static protectionToString(protection:string):string {
-        if ( protection === undefined) {
-            return "";
-        }
+    private static protectionToHtmlString(protection:string):HtmlString {
         if (protection === "free_registration") {
-            return "<span title=\"free registration required\"> &#x1f193;</span>";            
+            return HtmlString.buildFromTag(
+                "span",
+                "\u{1f193}",
+                "title", "free registration required"
+            )
         }
         if (protection === "payed_registration") {
-            return "<span title=\"payed registration required\"> &#x1f4b0;</span>";            
+            return HtmlString.buildFromTag(
+                "span",
+                "\u{1f4b0}",
+                "title", "payed registration required"
+            )
         }
-        throw "illegal call to protectionToString (unknown value = \"" + protection + "\")";
+        throw "illegal call to buildContentText.protectionToHtmlString() (unknown value = \"" + protection + "\")";
     }
-
     
-    private static statusToString(protection:string):string {
-        if ( protection === undefined) {
-            return "";
-        }
+    private static statusToHtmlString(protection:string):HtmlString {
         if ((protection === "dead") || (protection === "zombie")) {
-            return "<span title=\"dead link\"> &#x2020;</span>";            
+            return HtmlString.buildFromTag(
+                "span",
+                "\u{2020}",
+                "title", "dead link"
+            )
         }
-        throw "illegal call to protectionToString (unknown value = \"" + protection + "\")";
+        throw "illegal call to buildContentText.statusToHtmlString() (unknown value = \"" + protection + "\")";
     }
 }
 
