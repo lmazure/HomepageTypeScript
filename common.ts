@@ -20,12 +20,13 @@ interface Link {
     languages:string[];
     status:string;
     protection:string;
+    article:Article|undefined;
 }
 
 interface Article {
     links:Link[];
     date:number[];
-    authorIndexes:number[]|undefined;
+    authorIndexes:number[];
     authors:Author[]|undefined;
     page:string;
 }
@@ -92,7 +93,7 @@ class HtmlString {
         }
         let str = "<" + tag;
         for (let i:number =0; i<attributes.length; i += 2) {
-            str += " " + attributes[i] + "=\"" + attributes[i + 1] + "\"";
+            str += " " + attributes[i] + "=\"" + HtmlString.escapeAttributeValue(attributes[i + 1]) + "\"";
         }
         str += ">"
                 + ((typeof content === "string") ? HtmlString.escape(content) : (content as HtmlString).getHtml())
@@ -110,17 +111,23 @@ class HtmlString {
              .replace(/"/g, "&quot;")
              .replace(/'/g, "&#039;");
      }
+
+     private static escapeAttributeValue(unsafe:string):string {
+        return unsafe.replace(/"/g, '\\"');
+     }
 }
 
 enum ContentSort {
     Article,
-    Author
+    Author,
+    Link
 };
 
 class ContentBuilder {
 
     authors:Author[];
     articles:Article[];
+    links:Link[];
     sort:ContentSort;
     static instance:ContentBuilder; //TODO burp!
 
@@ -167,6 +174,7 @@ class ContentBuilder {
     }
 
     private postprocessData():void {
+        this.links = [];
         for (let article of this.articles) {
             if (article.authorIndexes !== undefined) {
                 article.authors = article.authorIndexes.map(i => this.authors[i]);
@@ -178,13 +186,23 @@ class ContentBuilder {
                     }
                 }    
             }
+            for (let l of article.links) {
+                l.article = article;
+                this.links.push(l);
+            }
         }
+        this.links.sort(function(l1:Link, l2:Link):number {
+            const u1:string = l1.url.substring(l1.url.indexOf("://") + 1);
+            const u2:string = l2.url.substring(l2.url.indexOf("://") + 1);
+            return u1.localeCompare(u2);
+        });
     }
 
     private buildContentText():HtmlString {
         switch (this.sort) {
             case ContentSort.Article : return this.buildContentTextForArticleSort();
             case ContentSort.Author : return this.buildContentTextForAuthorSort();
+            case ContentSort.Link : return this.buildContentTextForLinkSort();
         }
     }
 
@@ -198,15 +216,16 @@ class ContentBuilder {
         ContentBuilder.instance.createTable();
     }
 
+    public switchToLinkSort():void {
+        ContentBuilder.instance.sort = ContentSort.Link;
+        ContentBuilder.instance.createTable();
+    }
+
     private buildContentTextForArticleSort():HtmlString {
-        const authorsLink = HtmlString.buildFromTag("a", "authors",
-                                                    "href", "#",
-                                                    "onclick", "ContentBuilder.prototype.switchToAuthorSort()",
-                                                    "style", "cursor: pointer");
-        const cells:HtmlString = HtmlString.buildFromTag("th", "title")
-                                    .appendTag("th", authorsLink)
+        const cells:HtmlString = HtmlString.buildFromTag("th", ContentBuilder.getTitleHeader())
+                                    .appendTag("th", ContentBuilder.getAuthorsHeader())
                                     .appendTag("th", "date")
-                                    .appendTag("th", "URL")
+                                    .appendTag("th", ContentBuilder.getUrlHeader())
                                     .appendTag("th", "language")
                                     .appendTag("th", "format")
                                     .appendTag("th", "duration")
@@ -239,15 +258,11 @@ class ContentBuilder {
     }
 
     private buildContentTextForAuthorSort():HtmlString {
-        const articleLink = HtmlString.buildFromTag("a", "article",
-                                                    "href", "#",
-                                                    "onclick", "ContentBuilder.prototype.switchToArticleSort()",
-                                                    "style", "cursor: pointer");
         const cells:HtmlString = HtmlString.buildFromTag("th", "authors")
-                                           .appendTag("th", articleLink)
+                                           .appendTag("th", ContentBuilder.getTitleHeader())
                                            .appendTag("th", "co-authors")
                                            .appendTag("th", "date")
-                                           .appendTag("th", "URL")
+                                           .appendTag("th", ContentBuilder.getUrlHeader())
                                            .appendTag("th", "language")
                                            .appendTag("th", "format")
                                            .appendTag("th", "duration")
@@ -280,9 +295,66 @@ class ContentBuilder {
             }    
         }
         const table:HtmlString = HtmlString.buildFromTag("table", row , "class", "table");
-        const full:HtmlString = HtmlString.buildFromString("number of articles: " + this.articles.length)
+        const full:HtmlString = HtmlString.buildFromString("number of authors: " + this.authors.length)
                                         .appendString(table);
         return full;
+    }
+
+    private buildContentTextForLinkSort():HtmlString {
+        const cells:HtmlString = HtmlString.buildFromTag("th", "URL")
+                                    .appendTag("th", ContentBuilder.getTitleHeader())
+                                    .appendTag("th", ContentBuilder.getAuthorsHeader())
+                                    .appendTag("th", "date")
+                                    .appendTag("th", "language")
+                                    .appendTag("th", "format")
+                                    .appendTag("th", "duration")
+                                    .appendTag("th", "referring page");
+        const row:HtmlString = HtmlString.buildFromTag("tr", cells);
+        for (let link of this.links) {
+            const url:HtmlString = ContentBuilder.getUrlCellFromLink(link);
+            const title:HtmlString = ContentBuilder.getTitleCellFromLink(link);
+            const authors:HtmlString = ContentBuilder.getAuthorsCellFromArticle(link.article);
+            const date:HtmlString = ContentBuilder.getDateCellFromArticle(link.article);
+            const languages:HtmlString = ContentBuilder.getLanguageCellFromLink(link);
+            const formats:HtmlString = ContentBuilder.getFormatCellFromLink(link);
+            const duration:HtmlString = ContentBuilder.getDurationCellFromLink(link);
+            const referringPage:HtmlString =ContentBuilder.getReferringPageCellFromArticle(link.article);
+            const cells:HtmlString = HtmlString
+                                    .buildFromTag("td", url)
+                                    .appendTag("td", title)
+                                    .appendTag("td", authors)
+                                    .appendTag("td", date)
+                                    .appendTag("td", languages)
+                                    .appendTag("td", formats)
+                                    .appendTag("td", duration)
+                                    .appendTag("td", referringPage);
+            row.appendTag("tr",cells);
+        }
+        const table:HtmlString = HtmlString.buildFromTag("table", row , "class", "table");
+        const full:HtmlString = HtmlString.buildFromString("number of URLs: " + this.links.length)
+                                        .appendString(table);
+        return full;
+    }
+
+    private static getTitleHeader():HtmlString {
+        return HtmlString.buildFromTag("a", "title",
+                                        "href", "#",
+                                        "onclick", "ContentBuilder.prototype.switchToArticleSort()",
+                                        "style", "cursor: pointer");;
+    }
+
+    private static getAuthorsHeader():HtmlString {
+        return HtmlString.buildFromTag("a", "authors",
+                                        "href", "#",
+                                        "onclick", "ContentBuilder.prototype.switchToAuthorSort()",
+                                        "style", "cursor: pointer");
+    }
+
+    private static getUrlHeader():HtmlString {
+        return HtmlString.buildFromTag("a", "URL",
+                                        "href", "#",
+                                        "onclick", "ContentBuilder.prototype.switchToLinkSort()",
+                                        "style", "cursor: pointer");
     }
 
     private static getTitleCellFromLink(link:Link):HtmlString {
@@ -325,38 +397,41 @@ class ContentBuilder {
 
     private static getUrlCellFromArticle(article:Article):HtmlString {
         const urls:HtmlString = HtmlString.buildEmpty();
-        {
-            let flag:boolean = false;
-            for (let l of article.links) {
-                if (flag) {
-                    urls.appendEmptyTag("br");
-                } else {
-                    flag = true;
-                }
-                urls.appendTag(
-                    "a",
-                    l.url,
-                    "href", l.url,
-                    "title",
-                        "language: "
-                        + l.languages.join(" ")
-                        + " | format: "
-                        + l.formats.join(" ")
-                        + ((l.duration === undefined)
-                            ? ""
-                            : (" | duration: " + ContentBuilder.durationToString(l.duration))),
-                    "target", "_blank"
-                );
-                if (l.protection !== undefined) {
-                    urls.appendString(ContentBuilder.protectionToHtmlString(l.protection));
-                }
-                if (l.status !== undefined) {
-                    urls.appendString(ContentBuilder.statusToHtmlString(l.status));
-                }
+        let flag:boolean = false;
+        for (let l of article.links) {
+            if (flag) {
+                urls.appendEmptyTag("br");
+            } else {
+                flag = true;
             }
-        }            
+            urls.appendString(ContentBuilder.getUrlCellFromLink(l));
+        }
         return urls;
     }
+
+    private static getUrlCellFromLink(link:Link):HtmlString {
+        const url:HtmlString = HtmlString.buildFromTag(
+            "a",
+            link.url,
+            "href", link.url,
+            "title",
+                "language: "
+                + link.languages.join(" ")
+                + " | format: "
+                + link.formats.join(" ")
+                + ((link.duration === undefined)
+                    ? ""
+                    : (" | duration: " + ContentBuilder.durationToString(link.duration))),
+            "target", "_blank"
+        );
+        if (link.protection !== undefined) {
+            url.appendString(ContentBuilder.protectionToHtmlString(link.protection));
+        }
+        if (link.status !== undefined) {
+            url.appendString(ContentBuilder.statusToHtmlString(link.status));
+        }
+        return url;
+}
 
     private static getLanguageCellFromLink(link:Link):HtmlString {
         const languages:HtmlString = HtmlString.buildEmpty();
