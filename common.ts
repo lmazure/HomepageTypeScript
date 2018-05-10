@@ -112,12 +112,21 @@ class HtmlString {
      }
 }
 
+enum ContentSort {
+    Article,
+    Author
+};
+
 class ContentBuilder {
 
     authors:Author[];
     articles:Article[];
+    sort:ContentSort;
+    static instance:ContentBuilder; //TODO burp!
 
     constructor() {
+        this.sort = ContentSort.Article;
+        ContentBuilder.instance = this;
     }
 
     buildContent():void {
@@ -145,6 +154,7 @@ class ContentBuilder {
             if (this.readyState == 4 && this.status == 200) {
                 const myObj:any = JSON.parse(this.responseText);
                 that.articles = myObj.articles;
+                that.postprocessData();
                 that.createTable();
             }
         };
@@ -153,7 +163,6 @@ class ContentBuilder {
     }
 
     private createTable():void {
-        this.postprocessData();
         document.getElementById("content").innerHTML = this.buildContentText().getHtml();
     }
 
@@ -173,8 +182,29 @@ class ContentBuilder {
     }
 
     private buildContentText():HtmlString {
+        switch (this.sort) {
+            case ContentSort.Article : return this.buildContentTextForArticleSort();
+            case ContentSort.Author : return this.buildContentTextForAuthorSort();
+        }
+    }
+
+    public switchToAuthorSort():void {
+        ContentBuilder.instance.sort = ContentSort.Author;
+        ContentBuilder.instance.createTable();
+    }
+
+    public switchToArticleSort():void {
+        ContentBuilder.instance.sort = ContentSort.Article;
+        ContentBuilder.instance.createTable();
+    }
+
+    private buildContentTextForArticleSort():HtmlString {
+        const authorsLink = HtmlString.buildFromTag("a", "authors",
+                                                    "href", "#",
+                                                    "onclick", "ContentBuilder.prototype.switchToAuthorSort()",
+                                                    "style", "cursor: pointer");
         const cells:HtmlString = HtmlString.buildFromTag("th", "title")
-                                    .appendTag("th"," authors")
+                                    .appendTag("th", authorsLink)
                                     .appendTag("th", "date")
                                     .appendTag("th", "URL")
                                     .appendTag("th", "language")
@@ -183,92 +213,14 @@ class ContentBuilder {
                                     .appendTag("th", "referring page");
         const row:HtmlString = HtmlString.buildFromTag("tr", cells);
         for (let article of this.articles) {
-            const title:HtmlString = HtmlString.buildFromString(article.links[0].title);
-            if (article.links[0].subtitle !== undefined) {
-                title.appendEmptyTag("br")
-                    .appendString(article.links[0].subtitle);
-            }
-            const authors:HtmlString = HtmlString.buildEmpty();
-            if (article.authors !== undefined) {
-                let flag:boolean = false;
-                for (let a of article.authors) {
-                    if (flag) {
-                        authors.appendEmptyTag("br");
-                    } else {
-                        flag = true;
-                    }
-                    authors.appendString(ContentBuilder.authorToHtmlString(a));
-                }
-            }
-            const date:HtmlString = (article.date !== undefined)
-                ? HtmlString.buildFromString(ContentBuilder.dateToHtmlString(article.date))
-                : HtmlString.buildEmpty();
-            const urls:HtmlString = HtmlString.buildEmpty();
-            {
-                let flag:boolean = false;
-                for (let l of article.links) {
-                    if (flag) {
-                        urls.appendEmptyTag("br");
-                    } else {
-                        flag = true;
-                    }
-                    urls.appendTag(
-                        "a",
-                        l.url,
-                        "href", l.url,
-                        "title",
-                            "language: "
-                            + l.languages.join(" ")
-                            + " | format: "
-                            + l.formats.join(" ")
-                            + ((l.duration === undefined)
-                                ? ""
-                                : (" | duration: " + ContentBuilder.durationToString(l.duration))),
-                        "target", "_blank"
-                    );
-                    if (l.protection !== undefined) {
-                        urls.appendString(ContentBuilder.protectionToHtmlString(l.protection));
-                    }
-                    if (l.status !== undefined) {
-                        urls.appendString(ContentBuilder.statusToHtmlString(l.status));
-                    }
-                }
-            }            
-            const languages:HtmlString = HtmlString.buildEmpty();
-            {
-                let flag:boolean = false;
-                for (let l of article.links[0].languages) {
-                    if (flag) {
-                        languages.appendEmptyTag("br");
-                    } else {
-                        flag = true;
-                    }
-                    languages.appendString(l);
-                }                
-            }
-            const formats:HtmlString = HtmlString.buildEmpty();
-            {
-                let flag:boolean = false;
-                for (let l of article.links[0].formats) {
-                    if (flag) {
-                        formats.appendEmptyTag("br");
-                    } else {
-                        flag = true;
-                    }
-                    formats.appendString(l);
-                }                
-            }
-            const referringPage:HtmlString =
-                HtmlString.buildFromTag(
-                    "a",
-                    article.page,
-                    "href", "../" + article.page,
-                    "title", "language: en | format: HTML", //TODO do not hardcode language and format
-                    "target", "_self"
-                );
-            const duration:HtmlString = (article.links[0].duration !== undefined)
-                ? ContentBuilder.durationToHtmlString(article.links[0].duration)
-                : HtmlString.buildEmpty();
+            const title:HtmlString = ContentBuilder.getTitleCellFromLink(article.links[0]);
+            const authors:HtmlString = ContentBuilder.getAuthorsCellFromArticle(article);
+            const date:HtmlString = ContentBuilder.getDateCellFromArticle(article);
+            const urls:HtmlString = ContentBuilder.getUrlCellFromArticle(article);
+            const languages:HtmlString = ContentBuilder.getLanguageCellFromLink(article.links[0]);
+            const formats:HtmlString = ContentBuilder.getFormatCellFromLink(article.links[0]);
+            const duration:HtmlString = ContentBuilder.getDurationCellFromLink(article.links[0]);
+            const referringPage:HtmlString =ContentBuilder.getReferringPageCellFromArticle(article);
             const cells:HtmlString = HtmlString
                                     .buildFromTag("td", title)
                                     .appendTag("td", authors)
@@ -284,6 +236,177 @@ class ContentBuilder {
         const full:HtmlString = HtmlString.buildFromString("number of articles: " + this.articles.length)
                                         .appendString(table);
         return full;
+    }
+
+    private buildContentTextForAuthorSort():HtmlString {
+        const articleLink = HtmlString.buildFromTag("a", "article",
+                                                    "href", "#",
+                                                    "onclick", "ContentBuilder.prototype.switchToArticleSort()",
+                                                    "style", "cursor: pointer");
+        const cells:HtmlString = HtmlString.buildFromTag("th", "authors")
+                                           .appendTag("th", articleLink)
+                                           .appendTag("th", "co-authors")
+                                           .appendTag("th", "date")
+                                           .appendTag("th", "URL")
+                                           .appendTag("th", "language")
+                                           .appendTag("th", "format")
+                                           .appendTag("th", "duration")
+                                           .appendTag("th", "referring page");
+        const row:HtmlString = HtmlString.buildFromTag("tr", cells);
+        for (let author of this.authors) {
+            let first:boolean = true;
+            for (let article of author.articles) {
+                const title:HtmlString = ContentBuilder.getTitleCellFromLink(article.links[0]);
+                const coauthors:HtmlString = ContentBuilder.getCoauthorsCellFromArticle(article, author);
+                const date:HtmlString = ContentBuilder.getDateCellFromArticle(article);
+                const urls:HtmlString = ContentBuilder.getUrlCellFromArticle(article);
+                const languages:HtmlString = ContentBuilder.getLanguageCellFromLink(article.links[0]);
+                const formats:HtmlString = ContentBuilder.getFormatCellFromLink(article.links[0]);
+                const duration:HtmlString = ContentBuilder.getDurationCellFromLink(article.links[0]);
+                const referringPage:HtmlString =ContentBuilder.getReferringPageCellFromArticle(article);
+                const cells:HtmlString = first ? HtmlString.buildFromTag("td", ContentBuilder.authorToHtmlString(author),
+                                                                         "rowspan", author.articles.length.toString())
+                                               : HtmlString.buildEmpty();
+                cells.appendTag("td", title)
+                     .appendTag("td", coauthors)
+                     .appendTag("td", date)
+                     .appendTag("td", urls)
+                     .appendTag("td", languages)
+                     .appendTag("td", formats)
+                     .appendTag("td", duration)
+                     .appendTag("td", referringPage);
+                row.appendTag("tr",cells);
+                first = false;
+            }    
+        }
+        const table:HtmlString = HtmlString.buildFromTag("table", row , "class", "table");
+        const full:HtmlString = HtmlString.buildFromString("number of articles: " + this.articles.length)
+                                        .appendString(table);
+        return full;
+    }
+
+    private static getTitleCellFromLink(link:Link):HtmlString {
+        const title:HtmlString = HtmlString.buildFromString(link.title);
+        if (link.subtitle !== undefined) {
+            title.appendEmptyTag("br")
+                .appendString(link.subtitle);
+        }
+        return title;
+    }
+
+    private static getAuthorsCellFromArticle(article:Article):HtmlString {
+        return ContentBuilder.getCoauthorsCellFromArticle(article, undefined);
+    }
+
+    private static getCoauthorsCellFromArticle(article:Article, author:Author):HtmlString {
+        const authors:HtmlString = HtmlString.buildEmpty();
+        if (article.authors !== undefined) {
+            let flag:boolean = false;
+            for (let a of article.authors) {
+                if (a !== author) {
+                    if (flag) {
+                        authors.appendEmptyTag("br");
+                    } else {
+                        flag = true;
+                    }
+                    authors.appendString(ContentBuilder.authorToHtmlString(a));    
+                }
+            }
+        }
+        return authors;
+    }
+
+    private static getDateCellFromArticle(article:Article):HtmlString {
+        const date:HtmlString = (article.date !== undefined)
+        ? HtmlString.buildFromString(ContentBuilder.dateToHtmlString(article.date))
+        : HtmlString.buildEmpty();
+        return date;
+    }
+
+    private static getUrlCellFromArticle(article:Article):HtmlString {
+        const urls:HtmlString = HtmlString.buildEmpty();
+        {
+            let flag:boolean = false;
+            for (let l of article.links) {
+                if (flag) {
+                    urls.appendEmptyTag("br");
+                } else {
+                    flag = true;
+                }
+                urls.appendTag(
+                    "a",
+                    l.url,
+                    "href", l.url,
+                    "title",
+                        "language: "
+                        + l.languages.join(" ")
+                        + " | format: "
+                        + l.formats.join(" ")
+                        + ((l.duration === undefined)
+                            ? ""
+                            : (" | duration: " + ContentBuilder.durationToString(l.duration))),
+                    "target", "_blank"
+                );
+                if (l.protection !== undefined) {
+                    urls.appendString(ContentBuilder.protectionToHtmlString(l.protection));
+                }
+                if (l.status !== undefined) {
+                    urls.appendString(ContentBuilder.statusToHtmlString(l.status));
+                }
+            }
+        }            
+        return urls;
+    }
+
+    private static getLanguageCellFromLink(link:Link):HtmlString {
+        const languages:HtmlString = HtmlString.buildEmpty();
+        {
+            let flag:boolean = false;
+            for (let l of link.languages) {
+                if (flag) {
+                    languages.appendEmptyTag("br");
+                } else {
+                    flag = true;
+                }
+                languages.appendString(l);
+            }                
+        }
+        return languages;
+    }
+
+    private static getFormatCellFromLink(link:Link):HtmlString {
+        const formats:HtmlString = HtmlString.buildEmpty();
+        {
+            let flag:boolean = false;
+            for (let l of link.formats) {
+                if (flag) {
+                    formats.appendEmptyTag("br");
+                } else {
+                    flag = true;
+                }
+                formats.appendString(l);
+            }                
+        }
+        return formats;
+    }
+
+    private static getDurationCellFromLink(link:Link):HtmlString {
+        const duration:HtmlString = (link.duration !== undefined)
+        ? ContentBuilder.durationToHtmlString(link.duration)
+        : HtmlString.buildEmpty();
+        return duration;
+    }
+
+    private static getReferringPageCellFromArticle(article:Article):HtmlString {
+        const referringPage:HtmlString =
+                HtmlString.buildFromTag(
+                    "a",
+                    article.page,
+                    "href", "../" + article.page,
+                    "title", "language: en | format: HTML", //TODO do not hardcode language and format
+                    "target", "_self"
+                );
+        return referringPage;
     }
 
     private static authorToHtmlString(author:Author):HtmlString {
