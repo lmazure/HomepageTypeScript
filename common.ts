@@ -113,7 +113,7 @@ class HtmlString {
      }
 
      private static escapeAttributeValue(unsafe:string):string {
-        return unsafe.replace(/"/g, '\\"');
+        return unsafe.replace(/"/g, "&quot;");
      }
 }
 
@@ -240,15 +240,14 @@ class ContentBuilder {
             const formats:HtmlString = ContentBuilder.getFormatCellFromLink(article.links[0]);
             const duration:HtmlString = ContentBuilder.getDurationCellFromLink(article.links[0]);
             const referringPage:HtmlString =ContentBuilder.getReferringPageCellFromArticle(article);
-            const cells:HtmlString = HtmlString
-                                    .buildFromTag("td", title)
-                                    .appendTag("td", authors)
-                                    .appendTag("td", date)
-                                    .appendTag("td", urls)
-                                    .appendTag("td", languages)
-                                    .appendTag("td", formats)
-                                    .appendTag("td", duration)
-                                    .appendTag("td", referringPage);
+            const cells:HtmlString = HtmlString.buildFromTag("td", title)
+                                               .appendTag("td", authors)
+                                               .appendTag("td", date)
+                                               .appendTag("td", urls)
+                                               .appendTag("td", languages)
+                                               .appendTag("td", formats)
+                                               .appendTag("td", duration)
+                                               .appendTag("td", referringPage);
             row.appendTag("tr",cells);
         }
         const table:HtmlString = HtmlString.buildFromTag("table", row , "class", "table");
@@ -302,13 +301,13 @@ class ContentBuilder {
 
     private buildContentTextForLinkSort():HtmlString {
         const cells:HtmlString = HtmlString.buildFromTag("th", "URL")
-                                    .appendTag("th", ContentBuilder.getTitleHeader())
-                                    .appendTag("th", ContentBuilder.getAuthorsHeader())
-                                    .appendTag("th", "date")
-                                    .appendTag("th", "language")
-                                    .appendTag("th", "format")
-                                    .appendTag("th", "duration")
-                                    .appendTag("th", "referring page");
+                                           .appendTag("th", ContentBuilder.getTitleHeader())
+                                           .appendTag("th", ContentBuilder.getAuthorsHeader())
+                                           .appendTag("th", "date")
+                                           .appendTag("th", "language")
+                                           .appendTag("th", "format")
+                                           .appendTag("th", "duration")
+                                           .appendTag("th", "referring page");
         const row:HtmlString = HtmlString.buildFromTag("tr", cells);
         for (let link of this.links) {
             const url:HtmlString = ContentBuilder.getUrlCellFromLink(link);
@@ -319,20 +318,19 @@ class ContentBuilder {
             const formats:HtmlString = ContentBuilder.getFormatCellFromLink(link);
             const duration:HtmlString = ContentBuilder.getDurationCellFromLink(link);
             const referringPage:HtmlString =ContentBuilder.getReferringPageCellFromArticle(link.article);
-            const cells:HtmlString = HtmlString
-                                    .buildFromTag("td", url)
-                                    .appendTag("td", title)
-                                    .appendTag("td", authors)
-                                    .appendTag("td", date)
-                                    .appendTag("td", languages)
-                                    .appendTag("td", formats)
-                                    .appendTag("td", duration)
-                                    .appendTag("td", referringPage);
+            const cells:HtmlString = HtmlString.buildFromTag("td", url)
+                                               .appendTag("td", title)
+                                               .appendTag("td", authors)
+                                               .appendTag("td", date)
+                                               .appendTag("td", languages)
+                                               .appendTag("td", formats)
+                                               .appendTag("td", duration)
+                                               .appendTag("td", referringPage);
             row.appendTag("tr",cells);
         }
         const table:HtmlString = HtmlString.buildFromTag("table", row , "class", "table");
         const full:HtmlString = HtmlString.buildFromString("number of URLs: " + this.links.length)
-                                        .appendString(table);
+                                          .appendString(table);
         return full;
     }
 
@@ -422,7 +420,7 @@ class ContentBuilder {
                 + ((link.duration === undefined)
                     ? ""
                     : (" | duration: " + ContentBuilder.durationToString(link.duration))),
-            "target", "_blank"
+            "target", (link.url.indexOf("javascript:") === 0) ? "_self" : "_blank"
         );
         if (link.protection !== undefined) {
             url.appendString(ContentBuilder.protectionToHtmlString(link.protection));
