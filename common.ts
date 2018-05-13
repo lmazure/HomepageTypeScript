@@ -132,7 +132,16 @@ class ContentBuilder {
     static instance:ContentBuilder; //TODO burp!
 
     constructor() {
-        this.sort = ContentSort.Article;
+        switch (window.location.search) {
+            case "?sort=link" :
+                this.sort = ContentSort.Link;
+                break;
+            case "?sort=author" :
+                this.sort = ContentSort.Author;
+                break;
+            default:
+                this.sort = ContentSort.Article;
+        }
         ContentBuilder.instance = this;
     }
 
