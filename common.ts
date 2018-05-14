@@ -31,12 +31,12 @@ interface Article {
     page:string;
 }
 
-interface mapNode {
+interface MapNode {
     title:string;
     page:string;
     languages:string[];
     formats:string[];
-    children:mapNode[];
+    children:MapNode[];
 }
 
 class HtmlString {
@@ -128,6 +128,7 @@ class ContentBuilder {
     authors:Author[];
     articles:Article[];
     links:Link[];
+    referringPages:MapNode[];
     sort:ContentSort;
     static instance:ContentBuilder; //TODO burp!
 
@@ -170,19 +171,32 @@ class ContentBuilder {
             if (this.readyState == 4 && this.status == 200) {
                 const myObj:any = JSON.parse(this.responseText);
                 that.articles = myObj.articles;
-                that.postprocessData();
-                that.createTable();
+                that.getMap();
             }
         };
         articlesRequest.open("GET", "../content_tables/article.json");
         articlesRequest.send();        
     }
 
+    private getMap():void  {
+        const mapRequest = new XMLHttpRequest();
+        const that:ContentBuilder = this;
+        mapRequest.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                const myObj:any = JSON.parse(this.responseText);
+                that.postprocessData(myObj.root);
+                that.createTable();
+            }
+        };
+        mapRequest.open("GET", "../hack/map.json");
+        mapRequest.send();    
+    }
+
     private createTable():void {
         document.getElementById("content").innerHTML = this.buildContentText().getHtml();
     }
 
-    private postprocessData():void {
+    private postprocessData(rootNode:MapNode):void {
         this.links = [];
         for (let article of this.articles) {
             if (article.authorIndexes !== undefined) {
@@ -205,6 +219,17 @@ class ContentBuilder {
             const u2:string = l2.url.substring(l2.url.indexOf("://") + 1);
             return u1.localeCompare(u2);
         });
+        this.referringPages = [];
+        this.postProcessData_InserReferingPage(rootNode);
+    }
+
+    private postProcessData_InserReferingPage(node:MapNode): void {
+        this.referringPages[node.page] = node;
+        if (node.children !== undefined) {
+            for (let c of node.children) {
+                this.postProcessData_InserReferingPage(c);            
+            }    
+        }
     }
 
     private buildContentText():HtmlString {
@@ -248,7 +273,7 @@ class ContentBuilder {
             const languages:HtmlString = ContentBuilder.getLanguageCellFromLink(article.links[0]);
             const formats:HtmlString = ContentBuilder.getFormatCellFromLink(article.links[0]);
             const duration:HtmlString = ContentBuilder.getDurationCellFromLink(article.links[0]);
-            const referringPage:HtmlString =ContentBuilder.getReferringPageCellFromArticle(article);
+            const referringPage:HtmlString = this.getReferringPageCellFromArticle(article);
             const cells:HtmlString = HtmlString.buildFromTag("td", title)
                                                .appendTag("td", authors)
                                                .appendTag("td", date)
@@ -286,7 +311,7 @@ class ContentBuilder {
                 const languages:HtmlString = ContentBuilder.getLanguageCellFromLink(article.links[0]);
                 const formats:HtmlString = ContentBuilder.getFormatCellFromLink(article.links[0]);
                 const duration:HtmlString = ContentBuilder.getDurationCellFromLink(article.links[0]);
-                const referringPage:HtmlString =ContentBuilder.getReferringPageCellFromArticle(article);
+                const referringPage:HtmlString = this.getReferringPageCellFromArticle(article);
                 const cells:HtmlString = first ? HtmlString.buildFromTag("td", ContentBuilder.authorToHtmlString(author),
                                                                          "rowspan", author.articles.length.toString())
                                                : HtmlString.buildEmpty();
@@ -326,7 +351,7 @@ class ContentBuilder {
             const languages:HtmlString = ContentBuilder.getLanguageCellFromLink(link);
             const formats:HtmlString = ContentBuilder.getFormatCellFromLink(link);
             const duration:HtmlString = ContentBuilder.getDurationCellFromLink(link);
-            const referringPage:HtmlString =ContentBuilder.getReferringPageCellFromArticle(link.article);
+            const referringPage:HtmlString = this.getReferringPageCellFromArticle(link.article);
             const cells:HtmlString = HtmlString.buildFromTag("td", url)
                                                .appendTag("td", title)
                                                .appendTag("td", authors)
@@ -397,8 +422,8 @@ class ContentBuilder {
 
     private static getDateCellFromArticle(article:Article):HtmlString {
         const date:HtmlString = (article.date !== undefined)
-        ? HtmlString.buildFromString(ContentBuilder.dateToHtmlString(article.date))
-        : HtmlString.buildEmpty();
+                                    ? HtmlString.buildFromString(ContentBuilder.dateToHtmlString(article.date))
+                                    : HtmlString.buildEmpty();
         return date;
     }
 
@@ -479,13 +504,13 @@ class ContentBuilder {
         return duration;
     }
 
-    private static getReferringPageCellFromArticle(article:Article):HtmlString {
+    private getReferringPageCellFromArticle(article:Article):HtmlString {
         const referringPage:HtmlString =
                 HtmlString.buildFromTag(
                     "a",
                     article.page,
                     "href", "../" + article.page,
-                    "title", "language: en | format: HTML", //TODO do not hardcode language and format
+                    "title", "language: " + this.referringPages[article.page].languages.join() + " | format: " + this.referringPages[article.page].formats.join(),
                     "target", "_self"
                 );
         return referringPage;
@@ -638,7 +663,7 @@ class MapBuilder {
         return(false);
     }
 
-    private buildNodeText(node:mapNode, depth:number):string {
+    private buildNodeText(node:MapNode, depth:number):string {
         let str:string = "";
         for (let i=0; i < depth; i++) {
             str += "&nbsp;&nbsp;&nbsp;&nbsp;";
