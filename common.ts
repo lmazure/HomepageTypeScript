@@ -645,7 +645,7 @@ class MapBuilder {
         mapRequest.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
                 const myObj:any = JSON.parse(this.responseText);
-                document.getElementById("content").innerHTML = that.buildNodeText(myObj.root, 0);
+                document.getElementById("content").innerHTML = that.buildNodeText(myObj.root, 0).getHtml();
             }
         };
         mapRequest.open("GET", "../hack/map.json");
@@ -663,41 +663,35 @@ class MapBuilder {
         return(false);
     }
 
-    private buildNodeText(node:MapNode, depth:number):string {
-        let str:string = "";
+    private buildNodeText(node:MapNode, depth:number):HtmlString {
+        const str:HtmlString = HtmlString.buildEmpty();
         for (let i=0; i < depth; i++) {
-            str += "&nbsp;&nbsp;&nbsp;&nbsp;";
+            str.appendString("\u00A0\u00A0\u00A0\u00A0");
         }
         if (node.page == undefined) {
-            str += escapeHtml(node.title);
+            str.appendString(node.title);
         } else {
-            str += "<A href=\"../" + node.page + "\" title=\"language:";
-            for (var i=0; i < node.languages.length; i++) {
-                str += " " + node.languages[i];
-            }
-            str += " | format:";
-            for (let i=0; i < node.formats.length; i++) {
-                str += " " + node.formats[i];
-            }
-            str += "\" target=\"_self\"><span class=\"linktitle\">" + escapeHtml(node.title) +"</span></A>";
+            str.appendTag("a", node.title,
+                          "href", "../" + node.page,
+                          "title", "language: " + node.languages.join() + " | format: " + node.formats.join(),
+                          "target", "_self");
         }
         if (node.children == undefined) {
-            str += "<BR/>";
+            str.appendEmptyTag("br");
         } else {
-            str += "<A onclick=\"MapBuilder.prototype.handleNodeClick(" 
-                    + this.divCounter
-                    + ")\" id=\""
-                    + MapBuilder.toggleDivName + this.divCounter
-                    + "\"  style=\"cursor: pointer\">" 
-                    + MapBuilder.openedNodeSymbol
-                    + "</A><BR/><SPAN id=\""
-                    + MapBuilder.spanDivName + this.divCounter
-                    + "\">"
+            const counter = this.divCounter;
             this.divCounter++;
+            str.appendTag("a", MapBuilder.openedNodeSymbol,
+                          "onclick", "MapBuilder.prototype.handleNodeClick(" + counter + ")",
+                          "id", MapBuilder.toggleDivName + counter,
+                          "style", "cursor: pointer");
+            str.appendEmptyTag("br");
+            const childStr:HtmlString = HtmlString.buildEmpty();
             for (let child of node.children) {
-                str += this.buildNodeText(child, depth + 1);
+                childStr.appendString(this.buildNodeText(child, depth + 1));
             }
-            str += "</SPAN>";
+            str.appendTag("span", childStr,
+                          "id", MapBuilder.spanDivName + counter);
         }
         return str;
     }
