@@ -37,6 +37,7 @@ interface MapNode {
     languages:string[];
     formats:string[];
     children:MapNode[];
+    open:boolean|undefined;
 }
 
 class HtmlString {
@@ -370,23 +371,23 @@ class ContentBuilder {
 
     private static getTitleHeader():HtmlString {
         return HtmlString.buildFromTag("a", "title",
-                                        "href", "#",
-                                        "onclick", "ContentBuilder.prototype.switchToArticleSort()",
-                                        "style", "cursor: pointer");;
+                                       "href", "#",
+                                       "onclick", "ContentBuilder.prototype.switchToArticleSort()",
+                                       "style", "cursor: pointer");;
     }
 
     private static getAuthorsHeader():HtmlString {
         return HtmlString.buildFromTag("a", "authors",
-                                        "href", "#",
-                                        "onclick", "ContentBuilder.prototype.switchToAuthorSort()",
-                                        "style", "cursor: pointer");
+                                       "href", "#",
+                                       "onclick", "ContentBuilder.prototype.switchToAuthorSort()",
+                                       "style", "cursor: pointer");
     }
 
     private static getUrlHeader():HtmlString {
         return HtmlString.buildFromTag("a", "URL",
-                                        "href", "#",
-                                        "onclick", "ContentBuilder.prototype.switchToLinkSort()",
-                                        "style", "cursor: pointer");
+                                       "href", "#",
+                                       "onclick", "ContentBuilder.prototype.switchToLinkSort()",
+                                       "style", "cursor: pointer");
     }
 
     private static getTitleCellFromLink(link:Link):HtmlString {
@@ -541,16 +542,13 @@ class ContentBuilder {
 
     private static dateToHtmlString(date:number[]):HtmlString {
         switch (date.length) {
-            case 3: return ContentBuilder
-                        .monthToHtmlString(date[1])
-                        .appendString(" ")
-                        .appendString(ContentBuilder.dayToHtmlString(date[2]))
-                        .appendString(", " + date[0]);
-            case 2: return ContentBuilder
-                        .monthToHtmlString(date[1])
-                        .appendString(" " + date[0]);
-            case 1: return HtmlString
-                        .buildFromString("" + date[0]);
+            case 3: return ContentBuilder.monthToHtmlString(date[1])
+                                         .appendString(" ")
+                                         .appendString(ContentBuilder.dayToHtmlString(date[2]))
+                                         .appendString(", " + date[0]);
+            case 2: return ContentBuilder.monthToHtmlString(date[1])
+                                         .appendString(" " + date[0]);
+            case 1: return HtmlString.buildFromString("" + date[0]);
         }
         throw "illegal call to buildContentText.dateToHtmlString()";
     }
@@ -564,7 +562,7 @@ class ContentBuilder {
             case 22: return HtmlString.buildFromString("22").appendTag("sup", "nd");
             case  3: return HtmlString.buildFromString("3").appendTag("sup", "rd");
             case 23: return HtmlString.buildFromString("23").appendTag("sup", "rd");
-            default: return HtmlString.buildFromString(" " + day).appendTag("sup", "th");
+            default: return HtmlString.buildFromString("" + day).appendTag("sup", "th");
         }
     }
 
@@ -645,7 +643,12 @@ class MapBuilder {
         mapRequest.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
                 const myObj:any = JSON.parse(this.responseText);
-                document.getElementById("content").innerHTML = that.buildNodeText(myObj.root, 0).getHtml();
+                let page:string = null;
+                if (window.location.search.indexOf("?page=") === 0) {
+                    page = window.location.search.substring(6)
+                } 
+                that.initNodeOpenStatus(myObj.root, page);
+                document.getElementById("content").innerHTML = that.buildNodeText(myObj.root, 0, page).getHtml();
             }
         };
         mapRequest.open("GET", "../hack/map.json");
@@ -654,16 +657,39 @@ class MapBuilder {
 
     public handleNodeClick(index:number):boolean {
         if ($("#" + MapBuilder.spanDivName + index).is(":visible")) {
-            $("#" + MapBuilder.spanDivName + index).hide();
-            document.getElementById(MapBuilder.toggleDivName + index).innerHTML = MapBuilder.closedNodeSymbol;
+            MapBuilder.hideNode(index);
         } else {
-            $("#" + MapBuilder.spanDivName + index).show();
-            document.getElementById(MapBuilder.toggleDivName + index).innerHTML = MapBuilder.openedNodeSymbol;
+            MapBuilder.showNode(index);
         }
         return(false);
     }
 
-    private buildNodeText(node:MapNode, depth:number):HtmlString {
+    private static hideNode(index:number) {
+        $("#" + MapBuilder.spanDivName + index).hide();
+        document.getElementById(MapBuilder.toggleDivName + index).innerHTML = MapBuilder.closedNodeSymbol;
+    }
+
+    private static showNode(index:number) {
+        $("#" + MapBuilder.spanDivName + index).show();
+        document.getElementById(MapBuilder.toggleDivName + index).innerHTML = MapBuilder.openedNodeSymbol;
+    }
+
+    private initNodeOpenStatus(node:MapNode, page:string):boolean {
+        let oneChildIsOpen:boolean = false;
+        if (node.children !== undefined) {
+            for (let child of node.children) {
+                oneChildIsOpen = oneChildIsOpen || this.initNodeOpenStatus(child, page);
+            } 
+        }
+        if (node.page === page) {
+            node.open = true;                
+        } else {
+            node.open = oneChildIsOpen;
+        }
+        return node.open;
+    }
+
+    private buildNodeText(node:MapNode, depth:number, page:string):HtmlString {
         const str:HtmlString = HtmlString.buildEmpty();
         for (let i=0; i < depth; i++) {
             str.appendString("\u00A0\u00A0\u00A0\u00A0");
@@ -674,36 +700,37 @@ class MapBuilder {
             str.appendTag("a", node.title,
                           "href", "../" + node.page,
                           "title", "language: " + node.languages.join() + " | format: " + node.formats.join(),
-                          "target", "_self");
+                          "target", "_self",
+                          "style", (node.page === page ? "font-weight: bold" : ""));
         }
         if (node.children == undefined) {
             str.appendEmptyTag("br");
         } else {
             const counter = this.divCounter;
             this.divCounter++;
-            str.appendTag("a", MapBuilder.openedNodeSymbol,
+            str.appendTag("a", node.open ? MapBuilder.openedNodeSymbol : MapBuilder.closedNodeSymbol,
                           "onclick", "MapBuilder.prototype.handleNodeClick(" + counter + ")",
                           "id", MapBuilder.toggleDivName + counter,
                           "style", "cursor: pointer");
             str.appendEmptyTag("br");
             const childStr:HtmlString = HtmlString.buildEmpty();
             for (let child of node.children) {
-                childStr.appendString(this.buildNodeText(child, depth + 1));
+                childStr.appendString(this.buildNodeText(child, depth + 1, page));
             }
             str.appendTag("span", childStr,
-                          "id", MapBuilder.spanDivName + counter);
+                          "id", MapBuilder.spanDivName + counter,
+                          "style", "display: " + (node.open ? "initial": "none"));
         }
         return str;
     }
 }
 
 function escapeHtml(unsafe:string):string {
-    return unsafe
-         .replace(/&/g, "&amp;")
-         .replace(/</g, "&lt;")
-         .replace(/>/g, "&gt;")
-         .replace(/"/g, "&quot;")
-         .replace(/'/g, "&#039;");
+    return unsafe.replace(/&/g, "&amp;")
+                 .replace(/</g, "&lt;")
+                 .replace(/>/g, "&gt;")
+                 .replace(/"/g, "&quot;")
+                 .replace(/'/g, "&#039;");
  }
 
 function create_index() {
