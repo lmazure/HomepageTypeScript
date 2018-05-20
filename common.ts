@@ -161,7 +161,7 @@ class ContentBuilder {
                 that.getArticles();
             }
         };
-        authorsRequest.open("GET", "../content_tables/author.json");
+        authorsRequest.open("GET", "../content/author.json");
         authorsRequest.send();        
     }
 
@@ -175,7 +175,7 @@ class ContentBuilder {
                 that.getMap();
             }
         };
-        articlesRequest.open("GET", "../content_tables/article.json");
+        articlesRequest.open("GET", "../content/article.json");
         articlesRequest.send();        
     }
 
@@ -189,7 +189,7 @@ class ContentBuilder {
                 that.createTable();
             }
         };
-        mapRequest.open("GET", "../hack/map.json");
+        mapRequest.open("GET", "../content/map.json");
         mapRequest.send();    
     }
 
@@ -651,7 +651,7 @@ class MapBuilder {
                 document.getElementById("content").innerHTML = that.buildNodeText(myObj.root, 0, page).getHtml();
             }
         };
-        mapRequest.open("GET", "../hack/map.json");
+        mapRequest.open("GET", "../content/map.json");
         mapRequest.send();    
     }
 
