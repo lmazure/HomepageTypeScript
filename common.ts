@@ -203,11 +203,7 @@ class ContentBuilder {
             if (article.authorIndexes !== undefined) {
                 article.authors = article.authorIndexes.map(i => this.authors[i]);
                 for (let author of article.authors) {
-                    if (author.articles === undefined) {
-                        author.articles = [ article ];
-                    } else {
-                        author.articles.push(article);
-                    }
+                    ContentBuilder.insertArticleInAuthor(author, article);
                 }    
             }
             for (let l of article.links) {
@@ -222,6 +218,44 @@ class ContentBuilder {
         });
         this.referringPages = [];
         this.postProcessData_InserReferingPage(rootNode);
+    }
+
+    private static insertArticleInAuthor(author:Author, article:Article): void {
+        if (author.articles === undefined) {
+            author.articles = [ article ];
+        } else {
+            author.articles.push(article);
+            author.articles.sort(ContentBuilder.compareArticleByDate);
+        }
+    }
+
+    private static compareArticleByDate(article1:Article, article2:Article): number {
+        if (article1.date === undefined) {
+            if (article2.date === undefined) {
+                return article1.links[0].title.localeCompare(article2.links[0].title);
+            } else {
+                return -1;
+            }
+        } else {
+            if (article2.date === undefined) {
+                return 1;
+            } else {
+                const str1:string = ""
+                                  + article1.date[0]
+                                  + ((article1.date.length >1) ? article1.date[1] : "")
+                                  + ((article1.date.length >2) ? article1.date[2] : "");
+                const str2:string = ""
+                                  + article2.date[0]
+                                  + ((article2.date.length >1) ? article2.date[1] : "")
+                                  + ((article2.date.length >2) ? article2.date[2] : "");
+                const diff:number = str1.localeCompare(str2);
+                if (diff !== 0) {
+                    return diff;
+                } else {
+                    return article1.links[0].title.localeCompare(article2.links[0].title);                    
+                }
+            }
+        }
     }
 
     private postProcessData_InserReferingPage(node:MapNode): void {
