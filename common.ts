@@ -203,13 +203,20 @@ class ContentBuilder {
             if (article.authorIndexes !== undefined) {
                 article.authors = article.authorIndexes.map(i => this.authors[i]);
                 for (let author of article.authors) {
-                    ContentBuilder.insertArticleInAuthor(author, article);
+                    if (author.articles === undefined) {
+                        author.articles = [ article ];
+                    } else {
+                        author.articles.push(article);
+                    }
                 }    
             }
             for (let l of article.links) {
                 l.article = article;
                 this.links.push(l);
             }
+        }
+        for (let author of this.authors) {
+            author.articles.sort(ContentBuilder.compareArticleByDate);
         }
         this.links.sort(function(l1:Link, l2:Link):number {
             const u1:string = l1.url.substring(l1.url.indexOf("://") + 1);
@@ -218,15 +225,6 @@ class ContentBuilder {
         });
         this.referringPages = [];
         this.postProcessData_InserReferingPage(rootNode);
-    }
-
-    private static insertArticleInAuthor(author:Author, article:Article): void {
-        if (author.articles === undefined) {
-            author.articles = [ article ];
-        } else {
-            author.articles.push(article);
-            author.articles.sort(ContentBuilder.compareArticleByDate);
-        }
     }
 
     private static compareArticleByDate(article1:Article, article2:Article): number {
