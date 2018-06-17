@@ -132,13 +132,16 @@ class ContentBuilder {
     referringPages:MapNode[];
     sort:ContentSort;
     static instance:ContentBuilder; //TODO burp!
+    linkParameterString:string = "link"; // TOOD use an enum
+    authorParameterString:string = "author";
+    articleParameterString:string = "article";
 
     constructor() {
         switch (window.location.search) {
-            case "?sort=link" :
+            case "?sort=link" : // TODO utiliser linkParameterString
                 this.sort = ContentSort.Link;
                 break;
-            case "?sort=author" :
+            case "?sort=author" : // TODO utiliser authorParameterString
                 this.sort = ContentSort.Author;
                 break;
             default:
@@ -187,6 +190,7 @@ class ContentBuilder {
                 const myObj:any = JSON.parse(this.responseText);
                 that.postprocessData(myObj.root);
                 that.createTable();
+                that.setGoToMapHref();
             }
         };
         mapRequest.open("GET", "../content/map.json");
@@ -265,6 +269,23 @@ class ContentBuilder {
         }
     }
 
+    private setGoToMapHref():void {
+        let sortString:string;
+        switch (this.sort) {
+            case ContentSort.Article :
+                sortString = this.articleParameterString;
+                break;
+            case ContentSort.Author :
+                sortString = this.authorParameterString;
+                break;
+            case ContentSort.Link :
+                sortString = this.linkParameterString;
+                break;
+        }
+        const goToMapHref: string = document.getElementById("goToMap").getAttribute("href").replace(/\/content\.html.*/, "/content.html?sort=" + sortString);
+        document.getElementById("goToMap").setAttribute("href", goToMapHref);
+    }
+
     private buildContentText():HtmlString {
         switch (this.sort) {
             case ContentSort.Article : return this.buildContentTextForArticleSort();
@@ -275,17 +296,20 @@ class ContentBuilder {
 
     public switchToAuthorSort():void {
         ContentBuilder.instance.sort = ContentSort.Author;
-        ContentBuilder.instance.createTable();
+        ContentBuilder.instance.createTable(); // TODO these two lines are duplicated 4 times (once above, twice below)
+        ContentBuilder.instance.setGoToMapHref();
     }
 
     public switchToArticleSort():void {
         ContentBuilder.instance.sort = ContentSort.Article;
         ContentBuilder.instance.createTable();
+        ContentBuilder.instance.setGoToMapHref();
     }
 
     public switchToLinkSort():void {
         ContentBuilder.instance.sort = ContentSort.Link;
         ContentBuilder.instance.createTable();
+        ContentBuilder.instance.setGoToMapHref();
     }
 
     private buildContentTextForArticleSort():HtmlString {
