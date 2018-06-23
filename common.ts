@@ -119,9 +119,9 @@ class HtmlString {
 }
 
 enum ContentSort {
-    Article,
-    Author,
-    Link
+    Article = "article",
+    Author= "author",
+    Link = "link"
 };
 
 class ContentBuilder {
@@ -132,9 +132,6 @@ class ContentBuilder {
     referringPages:MapNode[];
     sort:ContentSort;
     static instance:ContentBuilder; //TODO burp!
-    linkParameterString:string = "link"; // TOOD use an enum
-    authorParameterString:string = "author";
-    articleParameterString:string = "article";
 
     constructor() {
         switch (window.location.search) {
@@ -270,35 +267,27 @@ class ContentBuilder {
     }
 
     private setGoToMapHref():void {
-        let sortString:string;
-        switch (this.sort) {
-            case ContentSort.Article :
-                sortString = this.articleParameterString;
-                break;
-            case ContentSort.Author :
-                sortString = this.authorParameterString;
-                break;
-            case ContentSort.Link :
-                sortString = this.linkParameterString;
-                break;
-        }
         const goToMapHref: string = document.getElementById("goToMap")
                                             .getAttribute("href")
-                                            .replace(/\/content\.html.*/, "/content.html?sort=" + sortString);
-        document.getElementById("goToMap").setAttribute("href", goToMapHref);
+                                            .replace(/\/content\.html.*/, "/content.html?sort=" + this.sort);
+        document.getElementById("goToMap")
+                .setAttribute("href", goToMapHref);
     }
 
     private buildContentText():HtmlString {
         switch (this.sort) {
-            case ContentSort.Article : return this.buildContentTextForArticleSort();
-            case ContentSort.Author : return this.buildContentTextForAuthorSort();
-            case ContentSort.Link : return this.buildContentTextForLinkSort();
+            case ContentSort.Article :
+                return this.buildContentTextForArticleSort();
+            case ContentSort.Author :
+                return this.buildContentTextForAuthorSort();
+            case ContentSort.Link :
+                return this.buildContentTextForLinkSort();
         }
     }
 
     public switchToAuthorSort():void {
         ContentBuilder.instance.sort = ContentSort.Author;
-        ContentBuilder.instance.updateContent(); // TODO these two lines are duplicated 4 times (once above, twice below)
+        ContentBuilder.instance.updateContent();
     }
 
     public switchToArticleSort():void {
@@ -313,13 +302,13 @@ class ContentBuilder {
 
     private buildContentTextForArticleSort():HtmlString {
         const cells:HtmlString = HtmlString.buildFromTag("th", ContentBuilder.getTitleHeader())
-                                          .appendTag("th", ContentBuilder.getAuthorsHeader())
-                                          .appendTag("th", "date")
-                                          .appendTag("th", ContentBuilder.getUrlHeader())
-                                          .appendTag("th", "language")
-                                          .appendTag("th", "format")
-                                          .appendTag("th", "duration")
-                                          .appendTag("th", "referring page");
+                                           .appendTag("th", ContentBuilder.getAuthorsHeader())
+                                           .appendTag("th", "date")
+                                           .appendTag("th", ContentBuilder.getUrlHeader())
+                                           .appendTag("th", "language")
+                                           .appendTag("th", "format")
+                                           .appendTag("th", "duration")
+                                           .appendTag("th", "referring page");
         const row:HtmlString = HtmlString.buildFromTag("tr", cells);
         for (let article of this.articles) {
             const title:HtmlString = ContentBuilder.getTitleCellFromLink(article.links[0]);
