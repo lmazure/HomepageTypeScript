@@ -189,16 +189,16 @@ class ContentBuilder {
             if (this.readyState == 4 && this.status == 200) {
                 const myObj:any = JSON.parse(this.responseText);
                 that.postprocessData(myObj.root);
-                that.createTable();
-                that.setGoToMapHref();
+                that.updateContent();
             }
         };
         mapRequest.open("GET", "../content/map.json");
         mapRequest.send();    
     }
 
-    private createTable():void {
+    private updateContent():void {
         document.getElementById("content").innerHTML = this.buildContentText().getHtml();
+        this.setGoToMapHref();
     }
 
     private postprocessData(rootNode:MapNode):void {
@@ -282,7 +282,9 @@ class ContentBuilder {
                 sortString = this.linkParameterString;
                 break;
         }
-        const goToMapHref: string = document.getElementById("goToMap").getAttribute("href").replace(/\/content\.html.*/, "/content.html?sort=" + sortString);
+        const goToMapHref: string = document.getElementById("goToMap")
+                                            .getAttribute("href")
+                                            .replace(/\/content\.html.*/, "/content.html?sort=" + sortString);
         document.getElementById("goToMap").setAttribute("href", goToMapHref);
     }
 
@@ -296,31 +298,28 @@ class ContentBuilder {
 
     public switchToAuthorSort():void {
         ContentBuilder.instance.sort = ContentSort.Author;
-        ContentBuilder.instance.createTable(); // TODO these two lines are duplicated 4 times (once above, twice below)
-        ContentBuilder.instance.setGoToMapHref();
+        ContentBuilder.instance.updateContent(); // TODO these two lines are duplicated 4 times (once above, twice below)
     }
 
     public switchToArticleSort():void {
         ContentBuilder.instance.sort = ContentSort.Article;
-        ContentBuilder.instance.createTable();
-        ContentBuilder.instance.setGoToMapHref();
+        ContentBuilder.instance.updateContent();
     }
 
     public switchToLinkSort():void {
         ContentBuilder.instance.sort = ContentSort.Link;
-        ContentBuilder.instance.createTable();
-        ContentBuilder.instance.setGoToMapHref();
+        ContentBuilder.instance.updateContent();
     }
 
     private buildContentTextForArticleSort():HtmlString {
         const cells:HtmlString = HtmlString.buildFromTag("th", ContentBuilder.getTitleHeader())
-                                    .appendTag("th", ContentBuilder.getAuthorsHeader())
-                                    .appendTag("th", "date")
-                                    .appendTag("th", ContentBuilder.getUrlHeader())
-                                    .appendTag("th", "language")
-                                    .appendTag("th", "format")
-                                    .appendTag("th", "duration")
-                                    .appendTag("th", "referring page");
+                                          .appendTag("th", ContentBuilder.getAuthorsHeader())
+                                          .appendTag("th", "date")
+                                          .appendTag("th", ContentBuilder.getUrlHeader())
+                                          .appendTag("th", "language")
+                                          .appendTag("th", "format")
+                                          .appendTag("th", "duration")
+                                          .appendTag("th", "referring page");
         const row:HtmlString = HtmlString.buildFromTag("tr", cells);
         for (let article of this.articles) {
             const title:HtmlString = ContentBuilder.getTitleCellFromLink(article.links[0]);
@@ -343,7 +342,7 @@ class ContentBuilder {
         }
         const table:HtmlString = HtmlString.buildFromTag("table", row , "class", "table");
         const full:HtmlString = HtmlString.buildFromString("number of articles: " + this.articles.length)
-                                        .appendString(table);
+                                          .appendString(table);
         return full;
     }
 
@@ -386,7 +385,7 @@ class ContentBuilder {
         }
         const table:HtmlString = HtmlString.buildFromTag("table", row , "class", "table");
         const full:HtmlString = HtmlString.buildFromString("number of authors: " + this.authors.length)
-                                        .appendString(table);
+                                          .appendString(table);
         return full;
     }
 
