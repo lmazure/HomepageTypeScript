@@ -285,18 +285,18 @@ class ContentBuilder {
         }
     }
 
-    public switchToAuthorSort():void {
-        ContentBuilder.instance.sort = ContentSort.Author;
-        ContentBuilder.instance.updateContent();
-    }
-
-    public switchToArticleSort():void {
-        ContentBuilder.instance.sort = ContentSort.Article;
-        ContentBuilder.instance.updateContent();
-    }
-
-    public switchToLinkSort():void {
-        ContentBuilder.instance.sort = ContentSort.Link;
+    public switchSort(sort: string):void {
+        switch (sort) {
+            case ContentSort.Article :
+                ContentBuilder.instance.sort = ContentSort.Article;
+                break;
+            case ContentSort.Author :
+                ContentBuilder.instance.sort = ContentSort.Author;
+                break;
+            case ContentSort.Link :
+                ContentBuilder.instance.sort = ContentSort.Link;
+                break;
+            }
         ContentBuilder.instance.updateContent();
     }
 
@@ -416,21 +416,21 @@ class ContentBuilder {
     private static getTitleHeader():HtmlString {
         return HtmlString.buildFromTag("a", "title",
                                        "href", "#",
-                                       "onclick", "ContentBuilder.prototype.switchToArticleSort()",
+                                       "onclick", "ContentBuilder.prototype.switchSort('" + ContentSort.Article + "')",
                                        "style", "cursor: pointer");;
     }
 
     private static getAuthorsHeader():HtmlString {
         return HtmlString.buildFromTag("a", "authors",
                                        "href", "#",
-                                       "onclick", "ContentBuilder.prototype.switchToAuthorSort()",
+                                       "onclick", "ContentBuilder.prototype.switchSort('" + ContentSort.Author + "')",
                                        "style", "cursor: pointer");
     }
 
     private static getUrlHeader():HtmlString {
         return HtmlString.buildFromTag("a", "URL",
                                        "href", "#",
-                                       "onclick", "ContentBuilder.prototype.switchToLinkSort()",
+                                       "onclick", "ContentBuilder.prototype.switchSort('" + ContentSort.Link + "')",
                                        "style", "cursor: pointer");
     }
 
