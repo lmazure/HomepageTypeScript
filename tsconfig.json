@@ -1,5 +1,6 @@
 {
     "compilerOptions": {
+        // TODO "noImplicitAny": true,
         "target": "es5",
         "sourceMap": true
     }
