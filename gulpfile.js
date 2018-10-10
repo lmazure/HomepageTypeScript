@@ -9,7 +9,7 @@ var gulp        = require("gulp"),
     runSequence = require("run-sequence"),
     mocha       = require("gulp-mocha"),
     istanbul    = require("gulp-istanbul"),
-    sourceMaps = require("gulp-sourcemaps"),
+    sourceMaps  = require("gulp-sourcemaps"),
     browserSync = require("browser-sync").create();
 
 gulp.task("tslint", () =>
@@ -21,10 +21,16 @@ gulp.task("tslint", () =>
 );
 
 var tsProject = tsc.createProject("tsconfig.json");
-gulp.task("build-app", function() {
+gulp.task("build", () => {
     var tsResult = tsProject.src()
                             .pipe(sourceMaps.init())
                             .pipe(tsProject())
                             .pipe(sourceMaps.write("."))
                             .pipe(gulp.dest("."));
+});
+
+gulp.task('minify', function() {
+    return gulp.src('common.js')
+      .pipe(uglify())
+      .pipe(gulp.dest('common.js.min'))
 });
