@@ -13,7 +13,7 @@ var gulp        = require("gulp"),
     browserSync = require("browser-sync").create();
 
 gulp.task("tslint", () =>
-    gulp.src("common.ts")
+    gulp.src("*.ts")
         .pipe(tslint({
             formatter: "verbose"
         }))
@@ -29,8 +29,8 @@ gulp.task("build", () => {
                             .pipe(gulp.dest("."));
 });
 
-gulp.task('minify', function() {
-    return gulp.src('common.js')
+gulp.task("minify", function() {
+    return gulp.src(["common.js", "HtmlString.js"])
       .pipe(uglify())
-      .pipe(gulp.dest('common.js.min'))
+      .pipe(gulp.dest("minified"))
 });

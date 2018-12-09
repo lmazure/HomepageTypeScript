@@ -1,5 +1,7 @@
-/// <reference path ="jquery.d.ts"/>
-/// <reference path ="google.analytics.d.ts"/>
+/// <reference path ="lib/jquery.d.ts"/>
+/// <reference path ="lib/google.analytics.d.ts"/>
+
+import HtmlString from "./HtmlString.js";
 
 interface Author {
     namePrefix: string;
@@ -40,83 +42,6 @@ interface MapNode {
     open: boolean|undefined;
 }
 
-class HtmlString {
-
-    private html: string;
-
-    private constructor() {
-        this.html = "";
-    }
-
-    public static buildEmpty(): HtmlString {
-        const that: HtmlString = new HtmlString();
-        return that;
-    }
-
-    public static buildFromString(str: string | HtmlString): HtmlString {
-        const that: HtmlString = new HtmlString();
-        that.appendString(str);
-        return that;
-    }
-
-    public static buildFromTag(tag: string, content: string | HtmlString, ...attributes: string[]) {
-        const that: HtmlString = new HtmlString();
-        that.performTagAppending(tag, content, attributes);
-        return that;
-    }
-
-    public getHtml(): string {
-        return this.html;
-    }
-
-    public isEmpty(): boolean {
-        return (this.html.length === 0);
-    }
-
-    public appendString(str: string | HtmlString): HtmlString {
-        this.html += (typeof str === "string") ? HtmlString.escape(str) : (str as HtmlString).getHtml();
-        return this;
-    }
-
-    public appendEmptyTag(tag: string): HtmlString {
-        this.html += "<" + tag + ">";
-        return this;
-    }
-
-    public appendTag(tag: string, content: string | HtmlString, ...attributes: string[]): HtmlString {
-        this.performTagAppending(tag, content, attributes);
-        return this;
-    }
-
-    private performTagAppending(tag: string, content: string | HtmlString, attributes: string[]): void {
-        if ((attributes.length % 2) !== 0) {
-            throw "illegal call to HtmlString.performTagAppending()";
-        }
-        let str = "<" + tag;
-        for (let i: number = 0; i < attributes.length; i += 2) {
-            str += " " + attributes[i] + "=\"" + HtmlString.escapeAttributeValue(attributes[i + 1]) + "\"";
-        }
-        str += ">"
-                + ((typeof content === "string") ? HtmlString.escape(content) : (content as HtmlString).getHtml())
-                + "</"
-                + tag
-                + ">";
-        this.html += str;
-    }
-
-    private static escape(unsafe: string): string {
-        return unsafe
-             .replace(/&/g, "&amp;")
-             .replace(/</g, "&lt;")
-             .replace(/>/g, "&gt;")
-             .replace(/"/g, "&quot;")
-             .replace(/'/g, "&#039;");
-     }
-
-     private static escapeAttributeValue(unsafe: string): string {
-        return unsafe.replace(/"/g, "&quot;");
-     }
-}
 
 enum ContentSort {
     Article = "article",
@@ -124,7 +49,7 @@ enum ContentSort {
     Link = "link",
 }
 
-class ContentBuilder {
+export default class ContentBuilder {
 
     private authors: Author[];
     private articles: Article[];
@@ -417,21 +342,21 @@ class ContentBuilder {
     private static getTitleHeader(): HtmlString {
         return HtmlString.buildFromTag("a", "title",
                                        "href", "#",
-                                       "onclick", "ContentBuilder.prototype.switchSort('" + ContentSort.Article + "')",
+                                       "onclick", "window.contentBuilderSwitchSort('" + ContentSort.Article + "')",
                                        "style", "cursor: pointer");
     }
 
     private static getAuthorsHeader(): HtmlString {
         return HtmlString.buildFromTag("a", "authors",
                                        "href", "#",
-                                       "onclick", "ContentBuilder.prototype.switchSort('" + ContentSort.Author + "')",
+                                       "onclick", "window.contentBuilderSwitchSort('" + ContentSort.Author + "')",
                                        "style", "cursor: pointer");
     }
 
     private static getUrlHeader(): HtmlString {
         return HtmlString.buildFromTag("a", "URL",
                                        "href", "#",
-                                       "onclick", "ContentBuilder.prototype.switchSort('" + ContentSort.Link + "')",
+                                       "onclick", "window.contentBuilderSwitchSort('" + ContentSort.Link + "')",
                                        "style", "cursor: pointer");
     }
 
@@ -544,9 +469,8 @@ class ContentBuilder {
     }
 
     private static getDurationCellFromLink(link: Link): HtmlString {
-        const duration: HtmlString = (link.duration !== undefined)
-        ? ContentBuilder.durationToHtmlString(link.duration)
-        : HtmlString.buildEmpty();
+        const duration: HtmlString = (link.duration !== undefined) ? ContentBuilder.durationToHtmlString(link.duration)
+                                                                   : HtmlString.buildEmpty();
         return duration;
     }
 
@@ -599,7 +523,7 @@ class ContentBuilder {
                                          .appendString(" " + date[0]);
             case 1: return HtmlString.buildFromString("" + date[0]);
         }
-        throw "illegal call to buildContentText.dateToHtmlString()";
+        throw "illegal call to buildContentText.dateToHtmlString(duration.length=" + date.length + ")";
     }
 
     private static dayToHtmlString(day: number): HtmlString {
@@ -675,7 +599,13 @@ class ContentBuilder {
     }
 }
 
-class MapBuilder {
+(<any>window).contentBuilderSwitchSort = (sort: string) => {
+    ContentBuilder.prototype.switchSort(sort);
+};
+
+// ---------------------------------------------------------------------------------------------------------------
+
+export class MapBuilder {
 
     private divCounter: number = 0;
     private static openedNodeSymbol: string = "\u25BC";
@@ -758,7 +688,7 @@ class MapBuilder {
             const counter = this.divCounter;
             this.divCounter++;
             str.appendTag("a", node.open ? MapBuilder.openedNodeSymbol : MapBuilder.closedNodeSymbol,
-                          "onclick", "MapBuilder.prototype.handleNodeClick(" + counter + ")",
+                          "onclick", "window.handleMapNodeClick(" + counter + ")",
                           "id", MapBuilder.toggleDivName + counter,
                           "style", "cursor: pointer");
             str.appendEmptyTag("br");
@@ -774,6 +704,12 @@ class MapBuilder {
     }
 }
 
+(<any>window).handleMapNodeClick = (index: number) => {
+    MapBuilder.prototype.handleNodeClick(index);
+};
+
+// ---------------------------------------------------------------------------------------------------------------
+
 function escapeHtml(unsafe: string): string {
     return unsafe.replace(/&/g, "&amp;")
                  .replace(/</g, "&lt;")
@@ -782,7 +718,9 @@ function escapeHtml(unsafe: string): string {
                  .replace(/'/g, "&#039;");
  }
 
-function create_index(): void {
+ // ---------------------------------------------------------------------------------------------------------------
+
+ (<any>window).create_index = () => {
     let letters: string = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     let w: number = 100.0 / letters.length;
     let str: string = '<table id="navigationBar" width="100%"><TR>';
@@ -797,22 +735,22 @@ function create_index(): void {
     }
   str += "<tr></table>";
   $("body").prepend(str);
-}
+};
 
 // ---------------------------------------------------------------------------------------------------------------
 
-function do_email() {
+(<any>window).do_email = () => {
     window.location.href = "mailto:"
                            + "lmazure.website%40gmail.com"
                            + "?subject="
                            + encodeURIComponent("about the '"
                                + document.title
                                + "' page");
-}
+};
 
 // ---------------------------------------------------------------------------------------------------------------
 
-function display_search() {
+(<any>window).display_search = () => {
     $("#searchPanel").slideToggle({
         done: function() {
             if ($("#searchPanel").is(":visible")) {
@@ -823,11 +761,11 @@ function display_search() {
             scrollTo(0, document.body.scrollHeight);
         },
     });
-}
+};
 
 // ---------------------------------------------------------------------------------------------------------------
 
-function do_search() {
+(<any>window).do_search = () => {
   let request: string = "http://www.google.com/search?as_sitesearch=mazure.fr&q=";
   const terms: string[] = (<string>($("#searchPanel>#panel>#text").val())).split(" ");
   for (let i: number = 0; i < terms.length; i++) {
@@ -839,7 +777,7 @@ function do_search() {
     }
   }
   open(request, "_blank");
-}
+};
 
 // ---------------------------------------------------------------------------------------------------------------
 
@@ -851,7 +789,7 @@ function do_search() {
 // j2se/<class>/<method>
 // clearcase/command
 
-function do_reference(str: string): void {
+(<any>window).do_reference = (str: string) => {
     const a: string[] = str.split("/");
     let url: string = "?";
     if ( a[0] === "rfc" ) {
@@ -878,13 +816,13 @@ function do_reference(str: string): void {
         + ".html";
     }
     window.open(url, "_blank");
-}
+};
 
 // ---------------------------------------------------------------------------------------------------------------
 
 declare function postInitialize(): void;
 
-function initialize(): void {
+(<any>window).onload = () => {
     const currdate: any = new Date();
 
     /* tslint:disable:no-string-literal */
@@ -911,6 +849,16 @@ function initialize(): void {
   if (typeof postInitialize === "function") {
     postInitialize();
   }
-}
+};
 
-window.onload = initialize;
+// ---------------------------------------------------------------------------------------------------------------
+
+(<any>window).do_person = (namePrefix:string, firstName: string, middleName: string, lastName: string, nameSuffix:string, givenName: string) => {
+  const description:string = "namePrefix=" + namePrefix
+    + "\nfirstName=" + firstName
+    + "\nmiddleName=" + middleName
+    + "\nlastName=" + lastName
+    + "\nnameSuffix=" + nameSuffix
+    + "\ngivenName=" + givenName;
+    alert(description);
+};
