@@ -853,12 +853,24 @@ declare function postInitialize(): void;
 
 // ---------------------------------------------------------------------------------------------------------------
 
+let personPopup:HTMLElement = null;
+
 (<any>window).do_person = (namePrefix:string, firstName: string, middleName: string, lastName: string, nameSuffix:string, givenName: string) => {
-  const description:string = "namePrefix=" + namePrefix
+
+    if (personPopup === null) {
+        personPopup= document.createElement('div');
+        personPopup.classList.add("personPopup");
+        document.getElementById("footer").insertAdjacentElement("afterend", personPopup);
+    }
+
+    const description:string = "namePrefix=" + namePrefix
     + "\nfirstName=" + firstName
     + "\nmiddleName=" + middleName
     + "\nlastName=" + lastName
     + "\nnameSuffix=" + nameSuffix
     + "\ngivenName=" + givenName;
-    alert(description);
+  const desc:HtmlString = HtmlString.buildFromTag("div", description);
+  //alert(description);
+  personPopup.innerHTML = desc.getHtml();
 };
+
