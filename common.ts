@@ -857,8 +857,10 @@ let personPopup:HTMLElement = null;
 
 (<any>window).do_person = (namePrefix:string, firstName: string, middleName: string, lastName: string, nameSuffix:string, givenName: string) => {
 
+    // TODO get position of the mouse click
+    // TODO place the popup at the mouse click position
     if (personPopup === null) {
-        personPopup= document.createElement('div');
+        personPopup= document.createElement("div");
         personPopup.classList.add("personPopup");
         document.getElementById("footer").insertAdjacentElement("afterend", personPopup);
     }
@@ -870,7 +872,8 @@ let personPopup:HTMLElement = null;
     + "\nnameSuffix=" + nameSuffix
     + "\ngivenName=" + givenName;
   const desc:HtmlString = HtmlString.buildFromTag("div", description);
-  //alert(description);
+  personPopup.style.top = "10px";
+  personPopup.style.left = "100px";
   personPopup.innerHTML = desc.getHtml();
 };
 
