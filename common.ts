@@ -853,31 +853,53 @@ declare function postInitialize(): void;
 
 // ---------------------------------------------------------------------------------------------------------------
 
-let personPopup:HTMLElement = null;
+let personPopup: HTMLElement = null;
 
-(<any>window).do_person = (event:MouseEvent,
-                           namePrefix:string,
+(<any>window).do_person = (event: MouseEvent,
+                           namePrefix: string,
                            firstName: string,
                            middleName: string,
                            lastName: string,
-                           nameSuffix:string,
+                           nameSuffix: string,
                            givenName: string) => {
 
+    event.stopPropagation();
     if (personPopup === null) {
-        personPopup= document.createElement("div");
+        personPopup = document.createElement("div");
+        personPopup.onclick = function(e: MouseEvent) { e.stopPropagation(); };
         personPopup.classList.add("personPopup");
         document.getElementById("footer").insertAdjacentElement("afterend", personPopup);
     }
 
-    const description:string = "namePrefix=" + namePrefix
-    + "\nfirstName=" + firstName
-    + "\nmiddleName=" + middleName
-    + "\nlastName=" + lastName
-    + "\nnameSuffix=" + nameSuffix
-    + "\ngivenName=" + givenName;
-  const desc:HtmlString = HtmlString.buildFromTag("div", description);
-  personPopup.style.top = event.pageY + "px";
-  personPopup.style.left = event.pageX + "px";
-  personPopup.innerHTML = desc.getHtml();
+    const description: HtmlString = HtmlString.buildEmpty();
+    if (namePrefix !== null) {
+        description.appendString(namePrefix).appendEmptyTag("br");
+    }
+    if (firstName !== null) {
+        description.appendString(firstName).appendEmptyTag("br");
+    }
+    if (middleName !== null) {
+        description.appendString(middleName).appendEmptyTag("br");
+    }
+    if (lastName !== null) {
+        description.appendString(lastName).appendEmptyTag("br");
+    }
+    if (nameSuffix !== null) {
+        description.appendString(nameSuffix).appendEmptyTag("br");
+    }
+    if (givenName !== null) {
+        description.appendString(givenName).appendEmptyTag("br");
+    }
+
+    const clickHandler = function(e: MouseEvent) {
+        window.removeEventListener("click", clickHandler);
+        personPopup.style.visibility = "hidden";
+    };
+    window.addEventListener("click", clickHandler);
+
+    personPopup.innerHTML = description.getHtml();
+    personPopup.style.top = event.pageY + "px";
+    personPopup.style.left = event.pageX + "px";
+    personPopup.style.visibility = "visible";
 };
 
