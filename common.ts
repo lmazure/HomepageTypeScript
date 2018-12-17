@@ -73,49 +73,41 @@ export default class ContentBuilder {
     }
 
     private buildContent(): void {
-        this.getAuthors();
+        // this.getAuthors();
+        let mapRoot: any;
+        const p1: Promise<any> = ContentBuilder.getJson("../content/author.json")
+                                               .then((data) => { this.authors = data.authors; })
+                                               .catch((error) => console.log("Failed to load author.json", error));
+        const p2: Promise<any> = ContentBuilder.getJson("../content/article.json")
+                                               .then((data) => { this.articles = data.articles; })
+                                               .catch((error) => console.log("Failed to load article.json", error));
+        const p3: Promise<any> = ContentBuilder.getJson("../content/map.json")
+                                               .then((data) => { mapRoot = data.root; })
+                                               .catch((error) => console.log("Failed to load map.json", error));
+        const promises: Promise<any>[] = [p1, p2, p3];
+        Promise.all(promises)
+               .then(() => {
+                 this.postprocessData(mapRoot);
+                 this.updateContent(); })
+               .catch((error) => console.log("Failed to process data", error));
     }
 
-    private getAuthors(): void {
-        const authorsRequest = new XMLHttpRequest();
-        const that: ContentBuilder = this;
-        authorsRequest.onreadystatechange = function() {
-            if (this.readyState === 4 && this.status === 200) {
-                const myObj: any = JSON.parse(this.responseText);
-                that.authors = myObj.authors;
-                that.getArticles();
+    private static getJson(url: string): any {
+        return new Promise(function(resolve, reject) {
+          const request = new XMLHttpRequest();
+          request.onload = function() {
+            if (this.status === 200) {
+                resolve(JSON.parse(this.responseText));
+            } else {
+                reject(Error(request.statusText));
             }
-        };
-        authorsRequest.open("GET", "../content/author.json");
-        authorsRequest.send();
-    }
-
-    private getArticles(): void {
-        const articlesRequest = new XMLHttpRequest();
-        const that: ContentBuilder = this;
-        articlesRequest.onreadystatechange = function() {
-            if (this.readyState === 4 && this.status === 200) {
-                const myObj: any = JSON.parse(this.responseText);
-                that.articles = myObj.articles;
-                that.getMap();
-            }
-        };
-        articlesRequest.open("GET", "../content/article.json");
-        articlesRequest.send();
-    }
-
-    private getMap(): void  {
-        const mapRequest = new XMLHttpRequest();
-        const that: ContentBuilder = this;
-        mapRequest.onreadystatechange = function() {
-            if (this.readyState === 4 && this.status === 200) {
-                const myObj: any = JSON.parse(this.responseText);
-                that.postprocessData(myObj.root);
-                that.updateContent();
-            }
-        };
-        mapRequest.open("GET", "../content/map.json");
-        mapRequest.send();
+          };
+          request.onerror = function() {
+            reject(Error("Network Error"));
+          };
+          request.open("GET", url);
+          request.send();
+        });
     }
 
     private updateContent(): void {
