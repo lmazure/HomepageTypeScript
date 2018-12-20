@@ -30,7 +30,7 @@ gulp.task("build", () => {
 });
 
 gulp.task("minify", function() {
-    return gulp.src(["common.js", "HtmlString.js"])
+    return gulp.src(["common.js", "HtmlString.js", "DataLoader.js"])
       .pipe(uglify())
       .pipe(gulp.dest("minified"))
 });
