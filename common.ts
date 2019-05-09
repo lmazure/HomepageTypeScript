@@ -712,6 +712,7 @@ declare function postInitialize(): void;
 // ---------------------------------------------------------------------------------------------------------------
 
 let personPopup: HTMLElement = null;
+let personPopupAuthors: Author[] = null;
 
 (<any>window).do_person = (event: MouseEvent,
                            namePrefix: string,
@@ -722,6 +723,16 @@ let personPopup: HTMLElement = null;
                            givenName: string) => {
 
     event.stopPropagation();
+
+    if (personPopupAuthors == null) {
+        const loader: DataLoader = new DataLoader( (authors, articles, links, referringPages) => {
+            personPopupAuthors = authors;
+            // this.articles = articles;
+            // this.links = links;
+            // this.referringPages = referringPages;
+        });
+    }
+
     if (personPopup === null) {
         personPopup = document.createElement("div");
         personPopup.onclick = function(e: MouseEvent) { e.stopPropagation(); };
@@ -730,23 +741,45 @@ let personPopup: HTMLElement = null;
     }
 
     const description: HtmlString = HtmlString.buildEmpty();
-    if (namePrefix !== null) {
+    let author: Author = {
+        articles: undefined,
+        firstName: firstName,
+        givenName: givenName,
+        lastName: lastName,
+        middleName: middleName,
+        namePrefix: namePrefix,
+        nameSuffix: nameSuffix,
+        };
+    if (namePrefix !== undefined) {
         description.appendString(namePrefix).appendEmptyTag("br");
     }
-    if (firstName !== null) {
+    if (firstName !== undefined) {
         description.appendString(firstName).appendEmptyTag("br");
     }
-    if (middleName !== null) {
+    if (middleName !== undefined) {
         description.appendString(middleName).appendEmptyTag("br");
     }
-    if (lastName !== null) {
+    if (lastName !== undefined) {
         description.appendString(lastName).appendEmptyTag("br");
     }
-    if (nameSuffix !== null) {
+    if (nameSuffix !== undefined) {
         description.appendString(nameSuffix).appendEmptyTag("br");
     }
-    if (givenName !== null) {
+    if (givenName !== undefined) {
         description.appendString(givenName).appendEmptyTag("br");
+    }
+
+    for (let a of personPopupAuthors) {
+        if ((a.namePrefix === author.namePrefix) &&
+            (a.firstName === author.firstName) &&
+            (a.middleName === author.middleName) &&
+            (a.lastName === author.lastName) &&
+            (a.nameSuffix === author.nameSuffix) &&
+            (a.givenName === author.givenName)) {
+            for (let art of a.articles) {
+                description.appendString(art.links[0].title).appendEmptyTag("br");
+            }
+        }
     }
 
     const clickHandler = function(e: MouseEvent) {
