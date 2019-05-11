@@ -62,20 +62,6 @@ export class DataLoader {
                .catch((error) => console.log("Failed to process data", error));
     }
 
-    /*
-    public getAuhors(): Author[] {
-        return this.authors;
-    }
-
-    public getArticles(): Article[] {
-        return this.articles;
-    }
-
-    public getLinks(): Link[] {
-        return this.links;
-    }
-    */
-
     private static getJson(url: string): any {
         return new Promise(function(resolve, reject) {
           const request = new XMLHttpRequest();
