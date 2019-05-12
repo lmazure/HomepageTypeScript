@@ -9,9 +9,6 @@ export class MapBuilder {
     private static spanDivName: string = "spanDiv";
     private static toggleDivName: string = "toggleDiv";
 
-    // constructor() {
-    // }
-
     private buildMap(): void  {
         const mapRequest = new XMLHttpRequest();
         const that: MapBuilder = this;

@@ -165,8 +165,15 @@ let personPopupAuthors: Author[] = null;
             // this.articles = articles;
             // this.links = links;
             // this.referringPages = referringPages;
+            (<any>window).do2_person(event, author);
         });
+    } else {
+        (<any>window).do2_person(event, author);
     }
+};
+
+(<any>window).do2_person = (event: MouseEvent,
+                            author: Author) => {
 
     if (personPopup === null) {
         personPopup = document.createElement("div");
