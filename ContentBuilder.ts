@@ -268,9 +268,14 @@ export default class ContentBuilder {
     }
 
     private static getUrlCellFromLink(link: Link): HtmlString {
+        return this.getTitleOrUrlFromLink(link, false);
+    }
+
+    private static getTitleOrUrlFromLink(link: Link, flag: boolean): HtmlString {
         const url: HtmlString = HtmlString.buildFromTag(
             "a",
-            link.url,
+            flag ? link.title + ((link.subtitle !== undefined) ? link.subtitle : "")
+                 : link.url,
             "href", link.url,
             "title",
                 "language: "
@@ -289,7 +294,7 @@ export default class ContentBuilder {
             url.appendString(ContentBuilder.statusToHtmlString(link.status));
         }
         return url;
-}
+    }
 
     private static getLanguageCellFromLink(link: Link): HtmlString {
         const languages: HtmlString = HtmlString.buildEmpty();
@@ -345,7 +350,7 @@ export default class ContentBuilder {
         return referringPage;
     }
 
-    private static authorToHtmlString(author: Author): HtmlString {
+    static authorToHtmlString(author: Author): HtmlString {
         let fullString: HtmlString = HtmlString.buildEmpty();
         fullString = this.appendSpaceAndPostfixToHtmlString(fullString, author.namePrefix);
         fullString = this.appendSpaceAndPostfixToHtmlString(fullString, author.firstName);
@@ -353,6 +358,10 @@ export default class ContentBuilder {
         fullString = this.appendSpaceAndPostfixToHtmlString(fullString, author.lastName);
         fullString = this.appendSpaceAndPostfixToHtmlString(fullString, author.nameSuffix);
         return this.appendSpaceAndPostfixToHtmlString(fullString, author.givenName);
+    }
+
+    static articleToHtmlString(link: Link): HtmlString {
+        return ContentBuilder.getTitleOrUrlFromLink(link, true);
     }
 
     private static durationToHtmlString(duration: number[]): HtmlString {
@@ -442,15 +451,15 @@ export default class ContentBuilder {
         throw "illegal call to buildContentText.protectionToHtmlString() (unknown value = \"" + protection + "\")";
     }
 
-    private static statusToHtmlString(protection: string): HtmlString {
-        if ((protection === "dead") || (protection === "zombie")) {
+    private static statusToHtmlString(status: string): HtmlString {
+        if ((status === "dead") || (status === "zombie")) {
             return HtmlString.buildFromTag(
                 "span",
                 "\u{2020}",
                 "title", "dead link",
             );
         }
-        throw "illegal call to buildContentText.statusToHtmlString() (unknown value = \"" + protection + "\")";
+        throw "illegal call to buildContentText.statusToHtmlString() (unknown value = \"" + status + "\")";
     }
 }
 

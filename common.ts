@@ -3,6 +3,7 @@
 
 import HtmlString from "./HtmlString.js";
 import { Author, Link, Article, MapNode, DataLoader } from "./DataLoader.js";
+import ContentBuilder from "./ContentBuilder.js";
 
 // ---------------------------------------------------------------------------------------------------------------
 
@@ -182,25 +183,7 @@ let personPopupAuthors: Author[] = null;
         document.getElementById("footer").insertAdjacentElement("afterend", personPopup);
     }
 
-    const description: HtmlString = HtmlString.buildEmpty();
-    if (author.namePrefix !== undefined) {
-        description.appendString(author.namePrefix).appendEmptyTag("br");
-    }
-    if (author.firstName !== undefined) {
-        description.appendString(author.firstName).appendEmptyTag("br");
-    }
-    if (author.middleName !== undefined) {
-        description.appendString(author.middleName).appendEmptyTag("br");
-    }
-    if (author.lastName !== undefined) {
-        description.appendString(author.lastName).appendEmptyTag("br");
-    }
-    if (author.nameSuffix !== undefined) {
-        description.appendString(author.nameSuffix).appendEmptyTag("br");
-    }
-    if (author.givenName !== undefined) {
-        description.appendString(author.givenName).appendEmptyTag("br");
-    }
+    const description: HtmlString = HtmlString.buildFromTag("h1", ContentBuilder.authorToHtmlString(author));
 
     for (let a of personPopupAuthors) {
         if ((a.namePrefix === author.namePrefix) &&
@@ -210,7 +193,7 @@ let personPopupAuthors: Author[] = null;
             (a.nameSuffix === author.nameSuffix) &&
             (a.givenName === author.givenName)) {
             for (let art of a.articles) {
-                description.appendString(art.links[0].title).appendEmptyTag("br");
+                description.appendString(ContentBuilder.articleToHtmlString(art.links[0])).appendEmptyTag("br");
             }
         }
     }
