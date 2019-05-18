@@ -178,6 +178,8 @@ let personPopupAuthors: Author[] = null;
 
     if (personPopup === null) {
         personPopup = document.createElement("div");
+        personPopup.style.width = "40%";
+        personPopup.style.height = "40%";
         personPopup.onclick = function(e: MouseEvent) { e.stopPropagation(); };
         personPopup.classList.add("personPopup");
         document.getElementById("footer").insertAdjacentElement("afterend", personPopup);
@@ -185,6 +187,7 @@ let personPopupAuthors: Author[] = null;
 
     const description: HtmlString = HtmlString.buildFromTag("h1", ContentBuilder.authorToHtmlString(author));
 
+    let articles: HtmlString = HtmlString.buildEmpty();
     for (let a of personPopupAuthors) {
         if ((a.namePrefix === author.namePrefix) &&
             (a.firstName === author.firstName) &&
@@ -193,10 +196,11 @@ let personPopupAuthors: Author[] = null;
             (a.nameSuffix === author.nameSuffix) &&
             (a.givenName === author.givenName)) {
             for (let art of a.articles) {
-                description.appendString(ContentBuilder.articleToHtmlString(art.links[0])).appendEmptyTag("br");
+                articles.appendTag("li", ContentBuilder.articleToHtmlString(art.links[0]));
             }
         }
     }
+    description.appendTag("ul", articles);
 
     const clickHandler = function(e: MouseEvent) {
         window.removeEventListener("click", clickHandler);
@@ -205,8 +209,15 @@ let personPopupAuthors: Author[] = null;
     window.addEventListener("click", clickHandler);
 
     personPopup.innerHTML = description.getHtml();
-    personPopup.style.top = event.pageY + "px";
-    personPopup.style.left = event.pageX + "px";
+    if ((event.clientY + personPopup.offsetHeight) < document.documentElement.clientHeight ) {
+        personPopup.style.top = event.pageY + "px";
+    } else {
+        personPopup.style.top = (event.pageY - personPopup.offsetHeight) + "px";
+    }
+    if ((event.clientX + personPopup.offsetWidth) < document.documentElement.clientWidth ) {
+        personPopup.style.left = event.pageX + "px";
+    } else {
+        personPopup.style.left = (event.pageX - personPopup.offsetWidth) + "px";
+    }
     personPopup.style.visibility = "visible";
 };
-

@@ -274,7 +274,7 @@ export default class ContentBuilder {
     private static getTitleOrUrlFromLink(link: Link, flag: boolean): HtmlString {
         const url: HtmlString = HtmlString.buildFromTag(
             "a",
-            flag ? link.title + ((link.subtitle !== undefined) ? link.subtitle : "")
+            flag ? link.title + ((link.subtitle !== undefined) ? (" — " + link.subtitle) : "")
                  : link.url,
             "href", link.url,
             "title",
@@ -350,7 +350,7 @@ export default class ContentBuilder {
         return referringPage;
     }
 
-    static authorToHtmlString(author: Author): HtmlString {
+    public static authorToHtmlString(author: Author): HtmlString {
         let fullString: HtmlString = HtmlString.buildEmpty();
         fullString = this.appendSpaceAndPostfixToHtmlString(fullString, author.namePrefix);
         fullString = this.appendSpaceAndPostfixToHtmlString(fullString, author.firstName);
@@ -360,7 +360,7 @@ export default class ContentBuilder {
         return this.appendSpaceAndPostfixToHtmlString(fullString, author.givenName);
     }
 
-    static articleToHtmlString(link: Link): HtmlString {
+    public static articleToHtmlString(link: Link): HtmlString {
         return ContentBuilder.getTitleOrUrlFromLink(link, true);
     }
 
