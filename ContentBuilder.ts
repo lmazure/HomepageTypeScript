@@ -271,11 +271,11 @@ export default class ContentBuilder {
         return this.getTitleOrUrlFromLink(link, false);
     }
 
-    private static getTitleOrUrlFromLink(link: Link, flag: boolean): HtmlString {
+    private static getTitleOrUrlFromLink(link: Link, displayTitleInsteadOfUrl: boolean): HtmlString {
         const url: HtmlString = HtmlString.buildFromTag(
             "a",
-            flag ? link.title + ((link.subtitle !== undefined) ? (" — " + link.subtitle) : "")
-                 : link.url,
+            displayTitleInsteadOfUrl ? link.title + ((link.subtitle !== undefined) ? (" — " + link.subtitle) : "")
+                                     : link.url,
             "href", link.url,
             "title",
                 "language: "
@@ -360,7 +360,7 @@ export default class ContentBuilder {
         return this.appendSpaceAndPostfixToHtmlString(fullString, author.givenName);
     }
 
-    public static articleToHtmlString(link: Link): HtmlString {
+    public static linkToHtmlString(link: Link): HtmlString {
         return ContentBuilder.getTitleOrUrlFromLink(link, true);
     }
 

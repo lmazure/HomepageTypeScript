@@ -6,6 +6,7 @@ export interface Author {
     nameSuffix: string;
     givenName: string;
     articles: Article[]|undefined;
+    links: Link[]|undefined;
 }
 
 export interface Link {
@@ -45,19 +46,23 @@ export class DataLoader {
     private referringPages: MapNode[];
 
     constructor(callback: (authors: Author[], articles: Article[], links: Link[], referringPages: MapNode[]) => void) {
-        let mapRoot: any;
+        let mapRoot: MapNode;
+        let adBook: any;
         const p1: Promise<any> = DataLoader.getJson("../content/author.json")
-                                           .then((data) => { this.authors = data.authors; })
+                                           .then((data: { authors: Author[]; }) => { this.authors = data.authors; })
                                            .catch((error) => console.log("Failed to load author.json", error));
         const p2: Promise<any> = DataLoader.getJson("../content/article.json")
-                                           .then((data) => { this.articles = data.articles; })
+                                           .then((data: { articles: Article[]; }) => { this.articles = data.articles; })
                                            .catch((error) => console.log("Failed to load article.json", error));
         const p3: Promise<any> = DataLoader.getJson("../content/map.json")
-                                           .then((data) => { mapRoot = data.root; })
+                                           .then((data: { root: MapNode; }) => { mapRoot = data.root; })
                                            .catch((error) => console.log("Failed to load map.json", error));
-        const promises: Promise<any>[] = [p1, p2, p3];
+        const p4: Promise<any> = DataLoader.getJson("../content/adbook.json")
+                                           .then((data: { adbook: any; }) => { adBook = data.adbook; })
+                                           .catch((error) => console.log("Failed to load adbook.json", error));
+        const promises: Promise<any>[] = [p1, p2, p3, p4];
         Promise.all(promises)
-               .then(() => this.postprocessData(mapRoot))
+               .then(() => this.postprocessData(mapRoot, adBook))
                .then(() => callback(this.authors, this.articles, this.links, this.referringPages))
                .catch((error) => console.log("Failed to process data", error));
     }
@@ -80,7 +85,7 @@ export class DataLoader {
         });
     }
 
-    private postprocessData(rootNode: MapNode): void {
+    private postprocessData(rootNode: MapNode, adBook: any): void {
         this.links = [];
         for (let article of this.articles) {
             if (article.authorIndexes !== undefined) {
@@ -108,6 +113,12 @@ export class DataLoader {
         });
         this.referringPages = [];
         this.postProcessData_InserReferingPage(rootNode);
+        for (let record of adBook) {
+            const author = this.getAuthor(record.author);
+            if (author !== null) {
+                author.links = record.links;
+            }
+        }
     }
 
     private postProcessData_InserReferingPage(node: MapNode): void {
@@ -117,6 +128,22 @@ export class DataLoader {
                 this.postProcessData_InserReferingPage(c);
             }
         }
+    }
+
+    private getAuthor(author: Author): Author {
+
+        for (let a of this.authors) {
+            if ((a.namePrefix === author.namePrefix) &&
+                (a.firstName === author.firstName) &&
+                (a.middleName === author.middleName) &&
+                (a.lastName === author.lastName) &&
+                (a.nameSuffix === author.nameSuffix) &&
+                (a.givenName === author.givenName)) {
+                return a;
+                }
+        }
+
+        return null;
     }
 
     private static compareArticleByDate(article1: Article, article2: Article): number {
