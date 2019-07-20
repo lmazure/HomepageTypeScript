@@ -230,5 +230,6 @@ let personPopupAuthors: Author[] = null;
     } else {
         personPopup.style.left = (event.pageX - personPopup.offsetWidth) + "px";
     }
+    personPopup.scrollTop = 0;
     personPopup.style.visibility = "visible";
 };
