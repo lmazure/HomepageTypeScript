@@ -33,7 +33,7 @@ function escapeHtml(unsafe: string): string {
                + "</a></td>";
     }
   str += "<tr></table>";
-  $("body").prepend(str);
+  document.body.insertAdjacentHTML( "afterbegin", str);
 };
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -50,16 +50,13 @@ function escapeHtml(unsafe: string): string {
 // ---------------------------------------------------------------------------------------------------------------
 
 (<any>window).display_search = () => {
-    $("#searchPanel").slideToggle({
-        done: function() {
-            if ($("#searchPanel").is(":visible")) {
-                $("#searchPanel>#panel>#text").focus();
-            }
-        },
-        progress: function() {
-            scrollTo(0, document.body.scrollHeight);
-        },
-    });
+    const searchPanel: HTMLElement = document.getElementById("searchPanel");
+    if (isHidden(searchPanel)) {
+        searchPanel.style.display = "block";
+        scrollTo(0, document.body.scrollHeight);
+    } else {
+        searchPanel.style.display = "none";
+    }
 };
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -233,3 +230,10 @@ let personPopupAuthors: Author[] = null;
     personPopup.scrollTop = 0;
     personPopup.style.visibility = "visible";
 };
+
+// ---------------------------------------------------------------------------------------------------------------
+
+function isHidden(element: HTMLElement): boolean {
+    const style:CSSStyleDeclaration = window.getComputedStyle(element);
+    return (style.display === "none");
+}
