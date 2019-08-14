@@ -234,6 +234,6 @@ let personPopupAuthors: Author[] = null;
 // ---------------------------------------------------------------------------------------------------------------
 
 function isHidden(element: HTMLElement): boolean {
-    const style:CSSStyleDeclaration = window.getComputedStyle(element);
+    const style: CSSStyleDeclaration = window.getComputedStyle(element);
     return (style.display === "none");
 }

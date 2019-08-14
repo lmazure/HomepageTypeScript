@@ -28,22 +28,18 @@ export class MapBuilder {
     }
 
     public handleNodeClick(index: number): boolean {
-        if ($("#" + MapBuilder.spanDivName + index).is(":visible")) {
-            MapBuilder.hideNode(index);
+        const spanElement: HTMLElement = document.getElementById(MapBuilder.spanDivName + index);
+        const toggleElement: HTMLElement = document.getElementById(MapBuilder.toggleDivName + index);
+        if ( window.getComputedStyle(spanElement).display === "none") {
+            // node is hidden -> show it
+            spanElement.style.display = "block";
+            toggleElement.innerHTML = MapBuilder.openedNodeSymbol;
         } else {
-            MapBuilder.showNode(index);
-        }
+            // node is visible -> hide it
+            spanElement.style.display = "none";
+            toggleElement.innerHTML = MapBuilder.closedNodeSymbol;
+            }
         return(false);
-    }
-
-    private static hideNode(index: number) {
-        $("#" + MapBuilder.spanDivName + index).hide();
-        document.getElementById(MapBuilder.toggleDivName + index).innerHTML = MapBuilder.closedNodeSymbol;
-    }
-
-    private static showNode(index: number) {
-        $("#" + MapBuilder.spanDivName + index).show();
-        document.getElementById(MapBuilder.toggleDivName + index).innerHTML = MapBuilder.openedNodeSymbol;
     }
 
     private initNodeOpenStatus(node: MapNode, page: string): boolean {
