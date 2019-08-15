@@ -1,4 +1,3 @@
-/// <reference path ="lib/jquery.d.ts"/>
 /// <reference path ="lib/google.analytics.d.ts"/>
 
 import HtmlString from "./HtmlString.js";
@@ -63,7 +62,7 @@ function escapeHtml(unsafe: string): string {
 
 (<any>window).do_search = () => {
   let request: string = "http://www.google.com/search?as_sitesearch=mazure.fr&q=";
-  const terms: string[] = (<string>($("#searchPanel>#panel>#text").val())).split(" ");
+  const terms: string[] = (<HTMLTextAreaElement>document.getElementById("searchText")).value.split(" ");
   for (let i: number = 0; i < terms.length; i++) {
     if (terms[i] !== "") { // to avoid additional space characters
       if (i > 0) {
