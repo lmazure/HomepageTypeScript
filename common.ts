@@ -53,6 +53,8 @@ function escapeHtml(unsafe: string): string {
     if (isHidden(searchPanel)) {
         searchPanel.style.display = "block";
         scrollTo(0, document.body.scrollHeight);
+        const searchText: HTMLElement = document.getElementById("searchText");
+        searchText.focus();
     } else {
         searchPanel.style.display = "none";
     }
