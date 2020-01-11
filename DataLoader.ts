@@ -12,7 +12,7 @@ export interface Author {
 export interface Link {
     url: string;
     title: string;
-    subtitle: string;
+    subtitle: string[];
     duration: number[];
     formats: string[];
     languages: string[];

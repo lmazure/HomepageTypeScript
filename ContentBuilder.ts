@@ -218,8 +218,8 @@ export default class ContentBuilder {
     private static getTitleCellFromLink(link: Link): HtmlString {
         const title: HtmlString = HtmlString.buildFromString(link.title);
         if (link.subtitle !== undefined) {
-            title.appendEmptyTag("br")
-                .appendString(link.subtitle);
+            title.appendString(" \u{2014} ")
+                 .appendString(link.subtitle.join(" \u{2014} "));
         }
         return title;
     }
@@ -457,6 +457,12 @@ export default class ContentBuilder {
                 "span",
                 "\u{2020}",
                 "title", "dead link",
+            );
+        } else if (status === "obsolete") {
+            return HtmlString.buildFromTag(
+                "span",
+                "\u{2021}",
+                "title", "obsolete",
             );
         }
         throw "illegal call to buildContentText.statusToHtmlString() (unknown value = \"" + status + "\")";
