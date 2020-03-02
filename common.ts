@@ -161,9 +161,6 @@ let personPopupAuthors: Author[] = null;
     if (personPopupAuthors == null) {
         const loader: DataLoader = new DataLoader( (authors, articles, links, referringPages) => {
             personPopupAuthors = authors;
-            // this.articles = articles;
-            // this.links = links;
-            // this.referringPages = referringPages;
             (<any>window).do2_person(event, author);
         });
     } else {
@@ -212,10 +209,22 @@ let personPopupAuthors: Author[] = null;
     description.appendTag("ul", articles);
 
     const clickHandler = function(e: MouseEvent) {
-        window.removeEventListener("click", clickHandler);
-        personPopup.style.visibility = "hidden";
+        undisplay();
     };
     window.addEventListener("click", clickHandler);
+
+    const keyupHandler = function(e: KeyboardEvent) {
+        if (e.key === "Escape") {
+            undisplay();
+        }
+    };
+    window.addEventListener("keyup", keyupHandler);
+
+    const undisplay = function() {
+        window.removeEventListener("click", clickHandler);
+        window.removeEventListener("keyup", keyupHandler);
+        personPopup.style.visibility = "hidden";
+    }
 
     personPopup.innerHTML = description.getHtml();
     if ((event.clientY + personPopup.offsetHeight) < document.documentElement.clientHeight ) {
