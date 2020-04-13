@@ -149,12 +149,12 @@ export class DataLoader {
             } else {
                 const str1: string = ""
                                    + article1.date[0]
-                                   + ((article1.date.length >= 1) ? ("0" + article1.date[1]).slice(-2) : "")
-                                   + ((article1.date.length >= 2) ? ("0" + article1.date[2]).slice(-2) : "");
+                                   + ((article1.date.length >= 2) ? (("0" + article1.date[1]).slice(-2)) : "")
+                                   + ((article1.date.length >= 3) ? (("0" + article1.date[2]).slice(-2)) : "");
                 const str2: string = ""
                                    + article2.date[0]
-                                   + ((article2.date.length >= 1) ? ("0" + article2.date[1]).slice(-2) : "")
-                                   + ((article2.date.length >= 2) ? ("0" + article2.date[2]).slice(-2) : "");
+                                   + ((article2.date.length >= 2) ? (("0" + article2.date[1]).slice(-2)) : "")
+                                   + ((article2.date.length >= 3) ? (("0" + article2.date[2]).slice(-2)) : "");
                 const diff: number = str1.localeCompare(str2);
                 if (diff !== 0) {
                     return diff;

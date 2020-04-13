@@ -118,14 +118,14 @@ export default class ContentBuilder {
 
     private buildContentTextForAuthorSort(): HtmlString {
         const headerCells: HtmlString = HtmlString.buildFromTag("th", "authors")
-                                            .appendTag("th", ContentBuilder.getTitleHeader())
-                                            .appendTag("th", "co-authors")
-                                            .appendTag("th", "date")
-                                            .appendTag("th", ContentBuilder.getUrlHeader())
-                                            .appendTag("th", "language")
-                                            .appendTag("th", "format")
-                                            .appendTag("th", "duration")
-                                            .appendTag("th", "referring page");
+                                                  .appendTag("th", ContentBuilder.getTitleHeader())
+                                                  .appendTag("th", "co-authors")
+                                                  .appendTag("th", "date")
+                                                  .appendTag("th", ContentBuilder.getUrlHeader())
+                                                  .appendTag("th", "language")
+                                                  .appendTag("th", "format")
+                                                  .appendTag("th", "duration")
+                                                  .appendTag("th", "referring page");
         const row: HtmlString = HtmlString.buildFromTag("tr", headerCells);
         for (let author of this.authors) {
             let first: boolean = true;
@@ -161,13 +161,13 @@ export default class ContentBuilder {
 
     private buildContentTextForLinkSort(): HtmlString {
         const headerCells: HtmlString = HtmlString.buildFromTag("th", "URL")
-                                           .appendTag("th", ContentBuilder.getTitleHeader())
-                                           .appendTag("th", ContentBuilder.getAuthorsHeader())
-                                           .appendTag("th", "date")
-                                           .appendTag("th", "language")
-                                           .appendTag("th", "format")
-                                           .appendTag("th", "duration")
-                                           .appendTag("th", "referring page");
+                                                  .appendTag("th", ContentBuilder.getTitleHeader())
+                                                  .appendTag("th", ContentBuilder.getAuthorsHeader())
+                                                  .appendTag("th", "date")
+                                                  .appendTag("th", "language")
+                                                  .appendTag("th", "format")
+                                                  .appendTag("th", "duration")
+                                                  .appendTag("th", "referring page");
         const row: HtmlString = HtmlString.buildFromTag("tr", headerCells);
         for (let link of this.links) {
             const url: HtmlString = ContentBuilder.getUrlCellFromLink(link);
@@ -472,4 +472,3 @@ export default class ContentBuilder {
 (<any>window).contentBuilderSwitchSort = (sort: string) => {
     ContentBuilder.prototype.switchSort(sort);
 };
-

@@ -224,7 +224,7 @@ let personPopupAuthors: Author[] = null;
         window.removeEventListener("click", clickHandler);
         window.removeEventListener("keyup", keyupHandler);
         personPopup.style.visibility = "hidden";
-    }
+    };
 
     personPopup.innerHTML = description.getHtml();
     if ((event.clientY + personPopup.offsetHeight) < document.documentElement.clientHeight ) {
