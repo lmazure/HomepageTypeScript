@@ -364,17 +364,17 @@ export default class ContentBuilder {
         return ContentBuilder.getTitleOrUrlFromLink(link, true);
     }
 
-    private static durationToHtmlString(duration: number[]): HtmlString {
+    private static durationToHtmlString(duration: number): HtmlString {
         return HtmlString.buildFromString(ContentBuilder.durationToString(duration));
     }
 
-    private static durationToString(duration: number[]): string {
-        switch (duration.length) {
-            case 3: return duration[0] + "h " + duration[1] + "m " + duration[2] + "s";
-            case 2: return duration[0] + "m " + duration[1] + "s";
-            case 1: return duration[0] + "s";
-        }
-        throw "illegal call to buildContentText.durationToString() (duration.length=" + duration.length + ")";
+    private static durationToString(duration: number): string {
+        let hours: number = Math.floor(duration / 3600);
+        let minutes: number = Math.floor((duration - hours * 3600) / 60);
+        let seconds: number = duration - hours * 3600 - minutes * 60;
+        return ((hours > 0 ) ? (hours + "h ") : "")
+            + (((hours > 0 ) || (minutes > 0 )) ? (minutes + "m ") : "")
+            + seconds + "s";
     }
 
     private static dateToHtmlString(date: number[]): HtmlString {

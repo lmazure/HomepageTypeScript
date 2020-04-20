@@ -13,7 +13,7 @@ export interface Link {
     url: string;
     title: string;
     subtitle: string[];
-    duration: number[];
+    duration: number;
     formats: string[];
     languages: string[];
     status: string;
