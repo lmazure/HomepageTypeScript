@@ -369,25 +369,35 @@ export default class ContentBuilder {
     }
 
     private static durationToString(duration: number): string {
+        if ((duration <= 0) || (duration >= 24*60*60)) {
+            throw "illegal call to buildContentText.dateToHtmlString() (duration = " + duration + ")";
+        }
         let hours: number = Math.floor(duration / 3600);
-        let minutes: number = Math.floor((duration - hours * 3600) / 60);
-        let seconds: number = duration - hours * 3600 - minutes * 60;
+        let minutes: number = Math.floor((duration % 3600) / 60);
+        let seconds: number = duration % 60;
         return ((hours > 0 ) ? (hours + "h ") : "")
             + (((hours > 0 ) || (minutes > 0 )) ? (minutes + "m ") : "")
             + seconds + "s";
     }
 
-    private static dateToHtmlString(date: number[]): HtmlString {
-        switch (date.length) {
-            case 3: return ContentBuilder.monthToHtmlString(date[1])
-                                         .appendString(" ")
-                                         .appendString(ContentBuilder.dayToHtmlString(date[2]))
-                                         .appendString(", " + date[0]);
-            case 2: return ContentBuilder.monthToHtmlString(date[1])
-                                         .appendString(" " + date[0]);
-            case 1: return HtmlString.buildFromString("" + date[0]);
+    private static dateToHtmlString(date: number): HtmlString {
+        if (date <= 9999) {
+            return HtmlString.buildFromString("" + date);
+        } else if (date <= 999999) {
+            let year: number = Math.floor(date / 100);
+            let month: number = date % 100;
+            return ContentBuilder.monthToHtmlString(month)
+                                 .appendString(" " + year);
+        } else if (date <= 99999999) {
+            let year: number = Math.floor(date / 10000);
+            let month: number = Math.floor((date % 10000) / 100);
+            let day: number = date % 100;
+            return ContentBuilder.monthToHtmlString(month)
+                                 .appendString(" ")
+                                 .appendString(ContentBuilder.dayToHtmlString(day))
+                                 .appendString(", " + year);
         }
-        throw "illegal call to buildContentText.dateToHtmlString(duration.length=" + date.length + ")";
+        throw "illegal call to buildContentText.dateToHtmlString() (date = " + date + ")";
     }
 
     private static dayToHtmlString(day: number): HtmlString {
@@ -418,7 +428,7 @@ export default class ContentBuilder {
             case 11: return HtmlString.buildFromString("November");
             case 12: return HtmlString.buildFromString("December");
         }
-        throw "illegal call to buildContentText.monthToHtmlString()";
+        throw "illegal call to buildContentText.monthToHtmlString() (month = " + month + ")";
     }
 
     private static appendSpaceAndPostfixToHtmlString(str: HtmlString, postfix: string|undefined): HtmlString {
