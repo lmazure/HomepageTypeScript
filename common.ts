@@ -220,6 +220,65 @@ let personPopupAuthors: Author[] = null;
 
 // ---------------------------------------------------------------------------------------------------------------
 
+let keywordPopup: HTMLElement = null;
+
+(<any>window).do_keyword = (event: MouseEvent,
+                            keyId: string) => {
+
+    event.stopPropagation();
+
+    (<any>window).do2_keyword(event, keyId);
+};
+
+(<any>window).do2_keyword = (event: MouseEvent,
+                             keyId: string) => {
+
+    if (keywordPopup === null) {
+        keywordPopup = document.createElement("div");
+        keywordPopup.style.width = "40%";
+        keywordPopup.style.height = "40%";
+        keywordPopup.onclick = function(e: MouseEvent) { e.stopPropagation(); };
+        keywordPopup.classList.add("keywordPopup");
+        document.getElementById("footer").insertAdjacentElement("afterend", keywordPopup);
+    }
+
+    const description: HtmlString = HtmlString.buildFromTag("h1", keyId);
+
+    const clickHandler = function(e: MouseEvent) {
+        undisplay();
+    };
+    window.addEventListener("click", clickHandler);
+
+    const keyupHandler = function(e: KeyboardEvent) {
+        if (e.key === "Escape") {
+            undisplay();
+        }
+    };
+    window.addEventListener("keyup", keyupHandler);
+
+    const undisplay = function() {
+        window.removeEventListener("click", clickHandler);
+        window.removeEventListener("keyup", keyupHandler);
+        keywordPopup.style.visibility = "hidden";
+    };
+
+    keywordPopup.innerHTML = description.getHtml();
+    if ((event.clientY + keywordPopup.offsetHeight) < document.documentElement.clientHeight ) {
+        keywordPopup.style.top = event.pageY + "px";
+    } else {
+        keywordPopup.style.top = (event.pageY - keywordPopup.offsetHeight) + "px";
+    }
+    if ((event.clientX + keywordPopup.offsetWidth) < document.documentElement.clientWidth ) {
+        keywordPopup.style.left = event.pageX + "px";
+    } else {
+        keywordPopup.style.left = (event.pageX - keywordPopup.offsetWidth) + "px";
+    }
+    keywordPopup.scrollTop = 0;
+    keywordPopup.style.visibility = "visible";
+};
+
+// ---------------------------------------------------------------------------------------------------------------
+
 function isHidden(element: HTMLElement): boolean {
     const style: CSSStyleDeclaration = window.getComputedStyle(element);
     return (style.display === "none");
