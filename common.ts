@@ -1,7 +1,7 @@
 /// <reference path ="lib/google.analytics.d.ts"/>
 
 import HtmlString from "./HtmlString.js";
-import { Author, Link, Article, MapNode, DataLoader } from "./DataLoader.js";
+import { Author, Link, Article, MapNode, Keyword, DataLoader } from "./DataLoader.js";
 import ContentBuilder from "./ContentBuilder.js";
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -136,7 +136,7 @@ let personPopupAuthors: Author[] = null;
     event.stopPropagation();
 
     if (personPopupAuthors == null) {
-        const loader: DataLoader = new DataLoader( (authors, articles, links, referringPages) => {
+        const loader: DataLoader = new DataLoader( (authors, articles, links, referringPages, keywords) => {
             personPopupAuthors = authors;
             (<any>window).do2_person(event, author);
         });
@@ -174,7 +174,7 @@ let personPopupAuthors: Author[] = null;
                 }
             }
             for (let art of a.articles) {
-            articles.appendTag("li", ContentBuilder.linkToHtmlString(art.links[0]));
+                articles.appendTag("li", ContentBuilder.linkToHtmlString(art.links[0]));
             }
         }
     }
@@ -221,13 +221,21 @@ let personPopupAuthors: Author[] = null;
 // ---------------------------------------------------------------------------------------------------------------
 
 let keywordPopup: HTMLElement = null;
+let keywordPopupKeywords: Keyword[] = null;
 
 (<any>window).do_keyword = (event: MouseEvent,
                             keyId: string) => {
 
     event.stopPropagation();
 
-    (<any>window).do2_keyword(event, keyId);
+    if (personPopupAuthors == null) {
+        const loader: DataLoader = new DataLoader( (authors, articles, links, referringPages, keywords) => {
+            keywordPopupKeywords = keywords;
+            (<any>window).do2_keyword(event, keyId);
+        });
+    } else {
+        (<any>window).do2_person(event, keyId);
+    }
 };
 
 (<any>window).do2_keyword = (event: MouseEvent,
@@ -242,7 +250,28 @@ let keywordPopup: HTMLElement = null;
         document.getElementById("footer").insertAdjacentElement("afterend", keywordPopup);
     }
 
-    const description: HtmlString = HtmlString.buildFromTag("h1", keyId);
+    const description: HtmlString = HtmlString.buildEmpty();
+
+    let links: HtmlString = HtmlString.buildEmpty();
+    let articles: HtmlString = HtmlString.buildEmpty();
+    for (let k of keywordPopupKeywords) {
+        if (k.id === keyId) {
+            if (k.links !== undefined) {
+                for (let link of k.links) {
+                    links.appendTag("li", ContentBuilder.linkToHtmlString(link));
+                }
+            }
+            for (let art of k.articles) {
+                articles.appendTag("li", ContentBuilder.linkToHtmlString(art.links[0]));
+            }
+        }
+    }
+    if (!links.isEmpty()) {
+        description.appendTag("h2", "Links");
+        description.appendTag("ul", links);
+    }
+    description.appendTag("h2", "Articles");
+    description.appendTag("ul", articles);
 
     const clickHandler = function(e: MouseEvent) {
         undisplay();
