@@ -1,4 +1,4 @@
-import HtmlString from "./HtmlString.js";
+import { HtmlString } from "./HtmlString.js";
 import { MapNode } from "./DataLoader.js";
 
 export class MapBuilder {

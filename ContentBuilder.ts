@@ -1,4 +1,4 @@
-import HtmlString from "./HtmlString.js";
+import { HtmlString } from "./HtmlString.js";
 import { Author, Link, Article, MapNode, DataLoader } from "./DataLoader.js";
 
 
@@ -8,7 +8,7 @@ enum ContentSort {
     Link = "link",
 }
 
-export default class ContentBuilder {
+export class ContentBuilder {
 
     private authors: Author[];
     private articles: Article[];

@@ -1,8 +1,9 @@
 /// <reference path ="lib/google.analytics.d.ts"/>
 
-import HtmlString from "./HtmlString.js";
+import { HtmlString } from "./HtmlString.js";
 import { Author, Link, Article, MapNode, Keyword, DataLoader } from "./DataLoader.js";
-import ContentBuilder from "./ContentBuilder.js";
+import { ContentBuilder } from "./ContentBuilder.js";
+import { Popup } from "./Popup.js";
 
 // ---------------------------------------------------------------------------------------------------------------
 
@@ -127,7 +128,7 @@ declare function postInitialize(): void;
 
 // ---------------------------------------------------------------------------------------------------------------
 
-let personPopup: HTMLElement = null;
+let popup: Popup = null;
 let personPopupAuthors: Author[] = null;
 
 (<any>window).do_person = (event: MouseEvent,
@@ -148,13 +149,8 @@ let personPopupAuthors: Author[] = null;
 (<any>window).do2_person = (event: MouseEvent,
                             author: Author) => {
 
-    if (personPopup === null) {
-        personPopup = document.createElement("div");
-        personPopup.style.width = "40%";
-        personPopup.style.height = "40%";
-        personPopup.onclick = function(e: MouseEvent) { e.stopPropagation(); };
-        personPopup.classList.add("personPopup");
-        document.getElementById("footer").insertAdjacentElement("afterend", personPopup);
+    if (popup === null) {
+        popup = new Popup();
     }
 
     const description: HtmlString = HtmlString.buildFromTag("h1", ContentBuilder.authorToHtmlString(author));
@@ -182,45 +178,16 @@ let personPopupAuthors: Author[] = null;
         description.appendTag("h2", "Links");
         description.appendTag("ul", links);
     }
-    description.appendTag("h2", "Articles");
-    description.appendTag("ul", articles);
-
-    const clickHandler = function(e: MouseEvent) {
-        undisplay();
-    };
-    window.addEventListener("click", clickHandler);
-
-    const keyupHandler = function(e: KeyboardEvent) {
-        if (e.key === "Escape") {
-            undisplay();
-        }
-    };
-    window.addEventListener("keyup", keyupHandler);
-
-    const undisplay = function() {
-        window.removeEventListener("click", clickHandler);
-        window.removeEventListener("keyup", keyupHandler);
-        personPopup.style.visibility = "hidden";
-    };
-
-    personPopup.innerHTML = description.getHtml();
-    if ((event.clientY + personPopup.offsetHeight) < document.documentElement.clientHeight ) {
-        personPopup.style.top = event.pageY + "px";
-    } else {
-        personPopup.style.top = (event.pageY - personPopup.offsetHeight) + "px";
+    if (!articles.isEmpty()) {
+        description.appendTag("h2", "Articles");
+        description.appendTag("ul", articles);
     }
-    if ((event.clientX + personPopup.offsetWidth) < document.documentElement.clientWidth ) {
-        personPopup.style.left = event.pageX + "px";
-    } else {
-        personPopup.style.left = (event.pageX - personPopup.offsetWidth) + "px";
-    }
-    personPopup.scrollTop = 0;
-    personPopup.style.visibility = "visible";
+
+    popup.display(event, description);
 };
 
 // ---------------------------------------------------------------------------------------------------------------
 
-let keywordPopup: HTMLElement = null;
 let keywordPopupKeywords: Keyword[] = null;
 
 (<any>window).do_keyword = (event: MouseEvent,
@@ -234,20 +201,15 @@ let keywordPopupKeywords: Keyword[] = null;
             (<any>window).do2_keyword(event, keyId);
         });
     } else {
-        (<any>window).do2_person(event, keyId);
+        (<any>window).do2_keyword(event, keyId);
     }
 };
 
 (<any>window).do2_keyword = (event: MouseEvent,
                              keyId: string) => {
 
-    if (keywordPopup === null) {
-        keywordPopup = document.createElement("div");
-        keywordPopup.style.width = "40%";
-        keywordPopup.style.height = "40%";
-        keywordPopup.onclick = function(e: MouseEvent) { e.stopPropagation(); };
-        keywordPopup.classList.add("keywordPopup");
-        document.getElementById("footer").insertAdjacentElement("afterend", keywordPopup);
+    if (popup === null) {
+        popup = new Popup();
     }
 
     const description: HtmlString = HtmlString.buildEmpty();
@@ -270,41 +232,13 @@ let keywordPopupKeywords: Keyword[] = null;
         description.appendTag("h2", "Links");
         description.appendTag("ul", links);
     }
-    description.appendTag("h2", "Articles");
-    description.appendTag("ul", articles);
-
-    const clickHandler = function(e: MouseEvent) {
-        undisplay();
-    };
-    window.addEventListener("click", clickHandler);
-
-    const keyupHandler = function(e: KeyboardEvent) {
-        if (e.key === "Escape") {
-            undisplay();
-        }
-    };
-    window.addEventListener("keyup", keyupHandler);
-
-    const undisplay = function() {
-        window.removeEventListener("click", clickHandler);
-        window.removeEventListener("keyup", keyupHandler);
-        keywordPopup.style.visibility = "hidden";
-    };
-
-    keywordPopup.innerHTML = description.getHtml();
-    if ((event.clientY + keywordPopup.offsetHeight) < document.documentElement.clientHeight ) {
-        keywordPopup.style.top = event.pageY + "px";
-    } else {
-        keywordPopup.style.top = (event.pageY - keywordPopup.offsetHeight) + "px";
+    if (!articles.isEmpty()) {
+        description.appendTag("h2", "Articles");
+        description.appendTag("ul", articles);
     }
-    if ((event.clientX + keywordPopup.offsetWidth) < document.documentElement.clientWidth ) {
-        keywordPopup.style.left = event.pageX + "px";
-    } else {
-        keywordPopup.style.left = (event.pageX - keywordPopup.offsetWidth) + "px";
-    }
-    keywordPopup.scrollTop = 0;
-    keywordPopup.style.visibility = "visible";
-};
+
+    popup.display(event, description);
+ };
 
 // ---------------------------------------------------------------------------------------------------------------
 
