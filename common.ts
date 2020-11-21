@@ -212,7 +212,7 @@ let keywordPopupKeywords: Keyword[] = null;
         popup = new Popup();
     }
 
-    const description: HtmlString = HtmlString.buildEmpty();
+    const description: HtmlString = HtmlString.buildFromTag("h1", keyId);
 
     let links: HtmlString = HtmlString.buildEmpty();
     let articles: HtmlString = HtmlString.buildEmpty();
