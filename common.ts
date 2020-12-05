@@ -79,45 +79,6 @@ function escapeHtml(unsafe: string): string {
 
 // ---------------------------------------------------------------------------------------------------------------
 
-// rfc/<rfc-number>
-// man/linux/<man-section-number>/<command>
-// man/macosx/<man-section-number>/<command>
-// man/x11/<man-section-number>/<command>
-// j2se/<class>
-// j2se/<class>/<method>
-// clearcase/command
-
-(<any>window).do_reference = (str: string) => {
-    const a: string[] = str.split("/");
-    let url: string = "?";
-    if ( a[0] === "rfc" ) {
-        url = "http://www.ietf.org/rfc/rfc" + a[1] + ".txt";
-    } else if ( a[0] === "man" && a[1] === "linux" ) {
-        url = "http://man7.org/linux/man-pages/man" + a[2].substr(0, 1) + "/" + a[3] + "." + a[2] + ".html";
-    } else if ( a[0] === "man" && a[1] === "macosx" ) {
-        url = "https://developer.apple.com/legacy/library/documentation/Darwin/Reference/ManPages/man"
-          + a[2]
-          + "/"
-          + a[3]
-          + "."
-          + a[2]
-          + ".html";
-    } else if ( a[0] === "man" && a[1] === "x11" ) {
-        url = "http://www.x.org/X11R6.8.2/doc/" + a[3] + "." + a[2] + ".html";
-    } else if ( a[0] === "j2se" && a.length === 2 ) {
-        url = "http://java.sun.com/j2se/1.5.0/docs/api/" + a[1].replace(/\./g, "/") + ".html";
-    } else if ( a[0] === "j2se" && a.length === 3 ) {
-        url = "http://java.sun.com/j2se/1.5.0/docs/api/" + a[1].replace(/\./g, "/") + ".html#" + escapeHtml(a[2]);
-    } else if ( a[0] === "clearcase" && a.length === 2 ) {
-        url = "http://www.agsrhichome.bnl.gov/Controls/doc/ClearCaseEnv/v4.0doc/cpf_4.0/ccase_ux/ccref/"
-        + a[1]
-        + ".html";
-    }
-    window.open(url, "_blank");
-};
-
-// ---------------------------------------------------------------------------------------------------------------
-
 declare function postInitialize(): void;
 
 (<any>window).onload = () => {
