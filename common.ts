@@ -1,5 +1,3 @@
-/// <reference path ="lib/google.analytics.d.ts"/>
-
 import { HtmlString } from "./HtmlString.js";
 import { Author, Link, Article, MapNode, Keyword, DataLoader } from "./DataLoader.js";
 import { ContentBuilder } from "./ContentBuilder.js";
