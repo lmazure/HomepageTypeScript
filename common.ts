@@ -62,7 +62,7 @@ function escapeHtml(unsafe: string): string {
 // ---------------------------------------------------------------------------------------------------------------
 
 (<any>window).do_search = () => {
-  let request: string = "http://www.google.com/search?as_sitesearch=mazure.fr&q=";
+  let request: string = "https://duckduckgo.com/?q=site%3Amazure.fr+";
   const terms: string[] = (<HTMLTextAreaElement>document.getElementById("searchText")).value.split(" ");
   for (let i: number = 0; i < terms.length; i++) {
     if (terms[i] !== "") { // to avoid additional space characters
