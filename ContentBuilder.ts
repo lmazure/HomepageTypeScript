@@ -474,6 +474,12 @@ export class ContentBuilder {
                 "\u{2021}",
                 "title", "obsolete",
             );
+        } else if (status === "removed") {
+            return HtmlString.buildFromTag(
+                "span",
+                "\u{1FAA6}",
+                "title", "obsolete",
+            );
         }
         throw "illegal call to buildContentText.statusToHtmlString() (unknown value = \"" + status + "\")";
     }
