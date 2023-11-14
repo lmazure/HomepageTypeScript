@@ -195,21 +195,21 @@ export class ContentBuilder {
     }
 
     private static getTitleHeader(): HtmlString {
-        return HtmlString.buildFromTag("a", "title",
+        return HtmlString.buildFromTag("a", HtmlString.buildFromTag("span", "title", "class", "linktitle"),
                                        "href", "#",
                                        "onclick", "window.contentBuilderSwitchSort('" + ContentSort.Article + "')",
                                        "style", "cursor: pointer");
     }
 
     private static getAuthorsHeader(): HtmlString {
-        return HtmlString.buildFromTag("a", "authors",
+        return HtmlString.buildFromTag("a", HtmlString.buildFromTag("span", "authors", "class", "linktitle"),
                                        "href", "#",
                                        "onclick", "window.contentBuilderSwitchSort('" + ContentSort.Author + "')",
                                        "style", "cursor: pointer");
     }
 
     private static getUrlHeader(): HtmlString {
-        return HtmlString.buildFromTag("a", "URL",
+        return HtmlString.buildFromTag("a", HtmlString.buildFromTag("span", "URL" , "class", "linktitle"),
                                        "href", "#",
                                        "onclick", "window.contentBuilderSwitchSort('" + ContentSort.Link + "')",
                                        "style", "cursor: pointer");
@@ -272,10 +272,11 @@ export class ContentBuilder {
     }
 
     private static getTitleOrUrlFromLink(link: Link, displayTitleInsteadOfUrl: boolean): HtmlString {
+        const txt: string = displayTitleInsteadOfUrl ? link.title + ((link.subtitle !== undefined) ? (" — " + link.subtitle) : "")
+                                                                                                   : link.url;
         const url: HtmlString = HtmlString.buildFromTag(
             "a",
-            displayTitleInsteadOfUrl ? link.title + ((link.subtitle !== undefined) ? (" — " + link.subtitle) : "")
-                                     : link.url,
+            HtmlString.buildFromTag("span", txt, "class", "articletitle"),
             "href", link.url,
             "title",
                 "language: "
@@ -338,7 +339,7 @@ export class ContentBuilder {
         const referringPage: HtmlString =
                 HtmlString.buildFromTag(
                     "a",
-                    article.page,
+                    HtmlString.buildFromTag("span", article.page, "class", "linktitle"),
                     "href", "../" + article.page,
                     "title",
                         "language: "

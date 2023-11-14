@@ -65,7 +65,7 @@ export class MapBuilder {
         if (node.page === undefined) {
             str.appendString(node.title);
         } else {
-            str.appendTag("a", node.title,
+            str.appendTag("a", HtmlString.buildFromTag("span", node.title , "class", "linktitle"),
                           "href", "../" + node.page,
                           "title", "language: " + node.languages.join() + " | format: " + node.formats.join(),
                           "target", "_self",
