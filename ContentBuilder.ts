@@ -81,6 +81,7 @@ export class ContentBuilder {
     }
 
     private buildContentTextForArticleSort(): HtmlString {
+        const anchors: string[] = [ "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
         const headerCells: HtmlString = HtmlString.buildFromTag("th", "title") // TODO use constants for the headers
                                                                                // including in the getXxxHeader methods
                                             .appendTag("th", ContentBuilder.getAuthorsHeader())
@@ -100,7 +101,13 @@ export class ContentBuilder {
             const formats: HtmlString = ContentBuilder.getFormatCellFromLink(article.links[0]);
             const duration: HtmlString = ContentBuilder.getDurationCellFromLink(article.links[0]);
             const referringPage: HtmlString = this.getReferringPageCellFromArticle(article);
-            const cells: HtmlString = HtmlString.buildFromTag("td", title)
+            const anchorsText: HtmlString = HtmlString.buildEmpty();
+            const getFirstAlphanumericCharacter: string = ContentBuilder.getFirstAlphanumericCharacter(article.links[0].title);
+            while ((anchors.length > 0) && (getFirstAlphanumericCharacter.length > 0) && (anchors[0].localeCompare(getFirstAlphanumericCharacter, "en-GB") <= 0)) {
+                anchorsText.appendTag("span", "", "id", anchors[0]);
+                anchors.shift();
+            }
+            const cells: HtmlString = HtmlString.buildFromTag("td", anchorsText.appendString(title))
                                                 .appendTag("td", authors)
                                                 .appendTag("td", date)
                                                 .appendTag("td", urls)
@@ -483,6 +490,16 @@ export class ContentBuilder {
             );
         }
         throw "illegal call to buildContentText.statusToHtmlString() (unknown value = \"" + status + "\")";
+    }
+
+    private static getFirstAlphanumericCharacter(str: string): string {
+        for (let i: number = 0; i < str.length; i++) {
+            let c: string = str.charAt(i);
+            if (/^\p{Alphabetic}|\p{Decimal_Number}$/u.test(c)) {
+                return c.toUpperCase();
+            }
+        }
+        return "";
     }
 }
 
