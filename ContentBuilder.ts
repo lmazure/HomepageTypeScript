@@ -174,6 +174,7 @@ export class ContentBuilder {
     }
 
     private buildContentTextForLinkSort(): HtmlString {
+        const anchors: string[] = [ "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
         const headerCells: HtmlString = HtmlString.buildFromTag("th", "URL")
                                                   .appendTag("th", ContentBuilder.getTitleHeader())
                                                   .appendTag("th", ContentBuilder.getAuthorsHeader())
@@ -192,7 +193,13 @@ export class ContentBuilder {
             const formats: HtmlString = ContentBuilder.getFormatCellFromLink(link);
             const duration: HtmlString = ContentBuilder.getDurationCellFromLink(link);
             const referringPage: HtmlString = this.getReferringPageCellFromArticle(link.article);
-            const cells: HtmlString = HtmlString.buildFromTag("td", url)
+            const anchorsText: HtmlString = HtmlString.buildEmpty();
+            const getFirstAlphanumericCharacter: string = ContentBuilder.getFirstAlphanumericCharacterOfUrl(link.url);
+            while ((anchors.length > 0) && (getFirstAlphanumericCharacter.length > 0) && (anchors[0].localeCompare(getFirstAlphanumericCharacter, "en-GB") <= 0)) {
+                anchorsText.appendTag("span", "", "id", anchors[0]);
+                anchors.shift();
+            }
+            const cells: HtmlString = HtmlString.buildFromTag("td", anchorsText.appendString(url))
                                                 .appendTag("td", title)
                                                 .appendTag("td", authors)
                                                 .appendTag("td", date)
@@ -524,11 +531,17 @@ export class ContentBuilder {
         }
         if (author.firstName !== undefined) {
             const c:string = this.getFirstAlphanumericCharacter(author.firstName);
-            if (c.length > 0 ) {
-                return c;
-            }
+            return c;
         }
         return "";
+    }
+    
+    private static  getFirstAlphanumericCharacterOfUrl(url: string): string {
+        if (url.startsWith("../")) {
+            return "";
+        }
+        const u:string = url.substring(url.indexOf("://") + 1);
+        return this.getFirstAlphanumericCharacter(u);
     }
 }
 

@@ -117,7 +117,7 @@ export class DataLoader {
         this.links.sort(function(l1: Link, l2: Link): number {
             const u1: string = l1.url.substring(l1.url.indexOf("://") + 1);
             const u2: string = l2.url.substring(l2.url.indexOf("://") + 1);
-            return u1.localeCompare(u2);
+            return u1.localeCompare(u2, "en-GB");
         });
         this.referringPages = [];
         this.postProcessData_InserReferingPage(rootNode);
@@ -155,7 +155,7 @@ export class DataLoader {
     private static compareArticleByDate(article1: Article, article2: Article): number {
         if (article1.date === undefined) {
             if (article2.date === undefined) {
-                return article1.links[0].title.localeCompare(article2.links[0].title);
+                return article1.links[0].title.localeCompare(article2.links[0].title, "en-GB");
             } else {
                 return -1;
             }
@@ -165,12 +165,11 @@ export class DataLoader {
             } else {
                 const str1: string = (article1.date.toString() + "0000").slice(0, 8);
                 const str2: string = (article2.date.toString() + "0000").slice(0, 8);
-                const diff: number = str1.localeCompare(str2);
+                const diff: number = str1.localeCompare(str2, "en-GB");
                 if (diff !== 0) {
                     return diff;
-                } else {
-                    return article1.links[0].title.localeCompare(article2.links[0].title);
                 }
+                return article1.links[0].title.localeCompare(article2.links[0].title, "en-GB");
             }
         }
     }
