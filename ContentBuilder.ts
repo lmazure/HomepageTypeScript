@@ -124,6 +124,7 @@ export class ContentBuilder {
     }
 
     private buildContentTextForAuthorSort(): HtmlString {
+        const anchors: string[] = [ "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
         const headerCells: HtmlString = HtmlString.buildFromTag("th", "authors")
                                                   .appendTag("th", ContentBuilder.getTitleHeader())
                                                   .appendTag("th", "co-authors")
@@ -145,7 +146,13 @@ export class ContentBuilder {
                 const formats: HtmlString = ContentBuilder.getFormatCellFromLink(article.links[0]);
                 const duration: HtmlString = ContentBuilder.getDurationCellFromLink(article.links[0]);
                 const referringPage: HtmlString = this.getReferringPageCellFromArticle(article);
-                const cells: HtmlString = first ? HtmlString.buildFromTag("td", ContentBuilder.authorToHtmlString(author),
+                const anchorsText: HtmlString = HtmlString.buildEmpty();
+                const getFirstAlphanumericCharacter: string = ContentBuilder.getFirstAlphanumericCharacterOfAuthor(author);
+                while ((anchors.length > 0) && (getFirstAlphanumericCharacter.length > 0) && (anchors[0].localeCompare(getFirstAlphanumericCharacter, "en-GB") <= 0)) {
+                    anchorsText.appendTag("span", "", "id", anchors[0]);
+                    anchors.shift();
+                }
+                const cells: HtmlString = first ? HtmlString.buildFromTag("td", anchorsText.appendString(ContentBuilder.authorToHtmlString(author)),
                                                                           "rowspan", author.articles.length.toString())
                                                 : HtmlString.buildEmpty();
                 cells.appendTag("td", title)
@@ -497,6 +504,28 @@ export class ContentBuilder {
             let c: string = str.charAt(i);
             if (/^\p{Alphabetic}|\p{Decimal_Number}$/u.test(c)) {
                 return c.toUpperCase();
+            }
+        }
+        return "";
+    }
+
+    private static getFirstAlphanumericCharacterOfAuthor(author: Author): string {
+        if (author.lastName !== undefined) {
+            const c:string = this.getFirstAlphanumericCharacter(author.lastName);
+            if (c.length > 0 ) {
+                return c;
+            }
+        }
+        if (author.givenName !== undefined) {
+            const c:string = this.getFirstAlphanumericCharacter(author.givenName);
+            if (c.length > 0 ) {
+                return c;
+            }
+        }
+        if (author.firstName !== undefined) {
+            const c:string = this.getFirstAlphanumericCharacter(author.firstName);
+            if (c.length > 0 ) {
+                return c;
             }
         }
         return "";
