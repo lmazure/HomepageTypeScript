@@ -379,7 +379,10 @@ export class ContentBuilder {
         fullString = this.appendSpaceAndPostfixToHtmlString(fullString, author.middleName);
         fullString = this.appendSpaceAndPostfixToHtmlString(fullString, author.lastName);
         fullString = this.appendSpaceAndPostfixToHtmlString(fullString, author.nameSuffix);
-        return this.appendSpaceAndPostfixToHtmlString(fullString, author.givenName);
+        if (author.givenName !== undefined) {
+            fullString = this.appendSpaceAndPostfixToHtmlString(fullString, '"' + author.givenName + '"');
+        }
+        return fullString;
     }
 
     public static linkToHtmlString(link: Link): HtmlString {
