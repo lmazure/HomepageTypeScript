@@ -373,15 +373,36 @@ export class ContentBuilder {
     }
 
     public static authorToHtmlString(author: Author): HtmlString {
-        let fullString: HtmlString = HtmlString.buildEmpty();
-        fullString = this.appendSpaceAndPostfixToHtmlString(fullString, author.namePrefix);
-        fullString = this.appendSpaceAndPostfixToHtmlString(fullString, author.firstName);
-        fullString = this.appendSpaceAndPostfixToHtmlString(fullString, author.middleName);
-        fullString = this.appendSpaceAndPostfixToHtmlString(fullString, author.lastName);
-        fullString = this.appendSpaceAndPostfixToHtmlString(fullString, author.nameSuffix);
-        if (author.givenName !== undefined) {
-            fullString = this.appendSpaceAndPostfixToHtmlString(fullString, '"' + author.givenName + '"');
+        let onClickString = "do_person(event, {";
+        if (author.namePrefix !== undefined) {
+            onClickString += 'namePrefix:"' + author.namePrefix + '",';
         }
+        if (author.firstName !== undefined) {
+            onClickString += 'firstName:"' + author.firstName + '",';
+        }
+        if (author.middleName !== undefined) {
+            onClickString += 'middleName:"' + author.middleName + '",';
+        }
+        if (author.lastName !== undefined) {
+            onClickString += 'lastName:"' + author.lastName + '",';
+        }
+        if (author.nameSuffix !== undefined) {
+            onClickString += 'nameSuffix:"' + author.nameSuffix + '",';
+        }
+        if (author.givenName !== undefined) {
+            onClickString += 'givenName:"' + author.givenName + '"';
+        }
+        onClickString += ' })';
+        let nameString: HtmlString = HtmlString.buildEmpty();
+        nameString = this.appendSpaceAndPostfixToHtmlString(nameString, author.namePrefix);
+        nameString = this.appendSpaceAndPostfixToHtmlString(nameString, author.firstName);
+        nameString = this.appendSpaceAndPostfixToHtmlString(nameString, author.middleName);
+        nameString = this.appendSpaceAndPostfixToHtmlString(nameString, author.lastName);
+        nameString = this.appendSpaceAndPostfixToHtmlString(nameString, author.nameSuffix);
+        if (author.givenName !== undefined) {
+            nameString = this.appendSpaceAndPostfixToHtmlString(nameString, '"' + author.givenName + '"');
+        }
+        const fullString: HtmlString = HtmlString.buildFromTag("span", nameString, "class", "author", "onclick", onClickString);
         return fullString;
     }
 
