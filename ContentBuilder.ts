@@ -19,10 +19,10 @@ export class ContentBuilder {
 
     constructor() {
         switch (window.location.search) {
-            case "?sort=link" : // TODO utiliser linkParameterString
+            case "?sort=link" : // TODO use linkParameterString
                 this.sort = ContentSort.Link;
                 break;
-            case "?sort=author" : // TODO utiliser authorParameterString
+            case "?sort=author" : // TODO use authorParameterString
                 this.sort = ContentSort.Author;
                 break;
             default:
@@ -373,7 +373,7 @@ export class ContentBuilder {
     }
 
     public static authorToHtmlString(author: Author): HtmlString {
-        let onClickString = "do_person(event, {";
+        let onClickString: string = "do_person(event, {";
         if (author.namePrefix !== undefined) {
             onClickString += 'namePrefix:"' + author.namePrefix + '",';
         }
