@@ -239,8 +239,8 @@ export class ContentBuilder {
     private static getTitleCellFromLink(link: Link): HtmlString {
         const title: HtmlString = HtmlString.buildFromString(link.title);
         if (link.subtitle !== undefined) {
-            title.appendString(" \u{2014} ")
-                 .appendString(link.subtitle.join(" \u{2014} "));
+            title.appendString(" — ")
+                 .appendString(link.subtitle.join(" — "));
         }
         return title;
     }
@@ -309,11 +309,11 @@ export class ContentBuilder {
                     : (" | duration: " + ContentBuilder.durationToString(link.duration))),
             "target", (link.url.indexOf("javascript:") === 0) ? "_self" : "_blank",
         );
-        if (link.protection !== undefined) {
-            url.appendString(ContentBuilder.protectionToHtmlString(link.protection));
-        }
         if (link.status !== undefined) {
             url.appendString(ContentBuilder.statusToHtmlString(link.status));
+        }
+        if (link.protection !== undefined) {
+            url.appendString(ContentBuilder.protectionToHtmlString(link.protection));
         }
         return url;
     }
@@ -493,14 +493,14 @@ export class ContentBuilder {
         if (protection === "free_registration") {
             return HtmlString.buildFromTag(
                 "span",
-                "\u{1f193}",
+                "🆓",
                 "title", "free registration required",
             );
         }
         if (protection === "payed_registration") {
             return HtmlString.buildFromTag(
                 "span",
-                "\u{1f4b0}",
+                "💰",
                 "title", "payed registration required",
             );
         }
@@ -511,19 +511,19 @@ export class ContentBuilder {
         if ((status === "dead") || (status === "zombie")) {
             return HtmlString.buildFromTag(
                 "span",
-                "\u{2020}",
+                "🚫",
                 "title", "dead link",
             );
         } else if (status === "obsolete") {
             return HtmlString.buildFromTag(
                 "span",
-                "\u{2021}",
+                "🏚️",
                 "title", "obsolete",
             );
         } else if (status === "removed") {
             return HtmlString.buildFromTag(
                 "span",
-                "\u{1FAA6}",
+                "🗑️",
                 "title", "obsolete",
             );
         }

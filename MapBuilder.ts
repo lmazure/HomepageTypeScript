@@ -4,8 +4,8 @@ import { MapNode } from "./DataLoader.js";
 export class MapBuilder {
 
     private divCounter: number = 0;
-    private static openedNodeSymbol: string = "\u25BC";
-    private static closedNodeSymbol: string = "\u25BA";
+    private static openedNodeSymbol: string = "▼";
+    private static closedNodeSymbol: string = "►";
     private static spanDivName: string = "spanDiv";
     private static toggleDivName: string = "toggleDiv";
 
