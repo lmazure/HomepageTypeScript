@@ -103,7 +103,9 @@ export class ContentBuilder {
             const referringPage: HtmlString = this.getReferringPageCellFromArticle(article);
             const anchorsText: HtmlString = HtmlString.buildEmpty();
             const getFirstAlphanumericCharacter: string = ContentBuilder.getFirstAlphanumericCharacter(article.links[0].title);
-            while ((anchors.length > 0) && (getFirstAlphanumericCharacter.length > 0) && (anchors[0].localeCompare(getFirstAlphanumericCharacter, "en-GB") <= 0)) {
+            while ((anchors.length > 0) &&
+                   (getFirstAlphanumericCharacter.length > 0) &&
+                   (anchors[0].localeCompare(getFirstAlphanumericCharacter, "en-GB") <= 0)) {
                 anchorsText.appendTag("span", "", "id", anchors[0]);
                 anchors.shift();
             }
@@ -148,7 +150,9 @@ export class ContentBuilder {
                 const referringPage: HtmlString = this.getReferringPageCellFromArticle(article);
                 const anchorsText: HtmlString = HtmlString.buildEmpty();
                 const getFirstAlphanumericCharacter: string = ContentBuilder.getFirstAlphanumericCharacterOfAuthor(author);
-                while ((anchors.length > 0) && (getFirstAlphanumericCharacter.length > 0) && (anchors[0].localeCompare(getFirstAlphanumericCharacter, "en-GB") <= 0)) {
+                while ((anchors.length > 0) &&
+                       (getFirstAlphanumericCharacter.length > 0) &&
+                       (anchors[0].localeCompare(getFirstAlphanumericCharacter, "en-GB") <= 0)) {
                     anchorsText.appendTag("span", "", "id", anchors[0]);
                     anchors.shift();
                 }
@@ -195,7 +199,9 @@ export class ContentBuilder {
             const referringPage: HtmlString = this.getReferringPageCellFromArticle(link.article);
             const anchorsText: HtmlString = HtmlString.buildEmpty();
             const getFirstAlphanumericCharacter: string = ContentBuilder.getFirstAlphanumericCharacterOfUrl(link.url);
-            while ((anchors.length > 0) && (getFirstAlphanumericCharacter.length > 0) && (anchors[0].localeCompare(getFirstAlphanumericCharacter, "en-GB") <= 0)) {
+            while ((anchors.length > 0) &&
+                   (getFirstAlphanumericCharacter.length > 0) &&
+                   (anchors[0].localeCompare(getFirstAlphanumericCharacter, "en-GB") <= 0)) {
                 anchorsText.appendTag("span", "", "id", anchors[0]);
                 anchors.shift();
             }
@@ -392,7 +398,7 @@ export class ContentBuilder {
         if (author.givenName !== undefined) {
             onClickString += 'givenName:"' + author.givenName + '"';
         }
-        onClickString += ' })';
+        onClickString += " })";
         let nameString: HtmlString = HtmlString.buildEmpty();
         nameString = this.appendSpaceAndPostfixToHtmlString(nameString, author.namePrefix);
         nameString = this.appendSpaceAndPostfixToHtmlString(nameString, author.firstName);
@@ -415,7 +421,7 @@ export class ContentBuilder {
     }
 
     private static durationToString(duration: number): string {
-        if ((duration <= 0) || (duration >= 24*60*60)) {
+        if ((duration <= 0) || (duration >= 24 * 60 * 60)) {
             throw "illegal call to buildContentText.dateToHtmlString() (duration = " + duration + ")";
         }
         let hours: number = Math.floor(duration / 3600);
@@ -438,25 +444,11 @@ export class ContentBuilder {
             let year: number = Math.floor(date / 10000);
             let month: number = Math.floor((date % 10000) / 100);
             let day: number = date % 100;
-            return ContentBuilder.monthToHtmlString(month)
-                                 .appendString(" ")
-                                 .appendString(ContentBuilder.dayToHtmlString(day))
-                                 .appendString(", " + year);
+            return HtmlString.buildFromString("" + day + " ")
+                             .appendString(ContentBuilder.monthToHtmlString(month))
+                             .appendString(" " + year);
         }
         throw "illegal call to buildContentText.dateToHtmlString() (date = " + date + ")";
-    }
-
-    private static dayToHtmlString(day: number): HtmlString {
-        switch (day) {
-            case  1: return HtmlString.buildFromString("1").appendTag("sup", "st");
-            case 21: return HtmlString.buildFromString("21").appendTag("sup", "st");
-            case 31: return HtmlString.buildFromString("31").appendTag("sup", "st");
-            case  2: return HtmlString.buildFromString("2").appendTag("sup", "nd");
-            case 22: return HtmlString.buildFromString("22").appendTag("sup", "nd");
-            case  3: return HtmlString.buildFromString("3").appendTag("sup", "rd");
-            case 23: return HtmlString.buildFromString("23").appendTag("sup", "rd");
-            default: return HtmlString.buildFromString("" + day).appendTag("sup", "th");
-        }
     }
 
     private static monthToHtmlString(month: number): HtmlString {
@@ -542,29 +534,29 @@ export class ContentBuilder {
 
     private static getFirstAlphanumericCharacterOfAuthor(author: Author): string {
         if (author.lastName !== undefined) {
-            const c:string = this.getFirstAlphanumericCharacter(author.lastName);
+            const c: string = this.getFirstAlphanumericCharacter(author.lastName);
             if (c.length > 0 ) {
                 return c;
             }
         }
         if (author.givenName !== undefined) {
-            const c:string = this.getFirstAlphanumericCharacter(author.givenName);
+            const c: string = this.getFirstAlphanumericCharacter(author.givenName);
             if (c.length > 0 ) {
                 return c;
             }
         }
         if (author.firstName !== undefined) {
-            const c:string = this.getFirstAlphanumericCharacter(author.firstName);
+            const c: string = this.getFirstAlphanumericCharacter(author.firstName);
             return c;
         }
         return "";
     }
-    
+
     private static  getFirstAlphanumericCharacterOfUrl(url: string): string {
         if (url.startsWith("../")) {
             return "";
         }
-        const u:string = url.substring(url.indexOf("://") + 1);
+        const u: string = url.substring(url.indexOf("://") + 1);
         return this.getFirstAlphanumericCharacter(u);
     }
 }
