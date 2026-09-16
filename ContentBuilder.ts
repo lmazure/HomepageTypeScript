@@ -380,6 +380,9 @@ export class ContentBuilder {
 
     public static authorToHtmlString(author: Author): HtmlString {
         let onClickString: string = "do_person(event, {";
+        if (author.order !== undefined) {
+            onClickString += 'order:"' + author.order + '",';
+        }
         if (author.namePrefix !== undefined) {
             onClickString += 'namePrefix:"' + author.namePrefix + '",';
         }
@@ -401,9 +404,15 @@ export class ContentBuilder {
         onClickString += " })";
         let nameString: HtmlString = HtmlString.buildEmpty();
         nameString = this.appendSpaceAndPostfixToHtmlString(nameString, author.namePrefix);
-        nameString = this.appendSpaceAndPostfixToHtmlString(nameString, author.firstName);
-        nameString = this.appendSpaceAndPostfixToHtmlString(nameString, author.middleName);
-        nameString = this.appendSpaceAndPostfixToHtmlString(nameString, author.lastName);
+        if (author.order === "eastern") {
+            nameString = this.appendSpaceAndPostfixToHtmlString(nameString, author.lastName);
+            nameString = this.appendSpaceAndPostfixToHtmlString(nameString, author.middleName);
+            nameString = this.appendSpaceAndPostfixToHtmlString(nameString, author.firstName);
+        } else {
+            nameString = this.appendSpaceAndPostfixToHtmlString(nameString, author.firstName);
+            nameString = this.appendSpaceAndPostfixToHtmlString(nameString, author.middleName);
+            nameString = this.appendSpaceAndPostfixToHtmlString(nameString, author.lastName);
+        }
         nameString = this.appendSpaceAndPostfixToHtmlString(nameString, author.nameSuffix);
         if (author.givenName !== undefined) {
             nameString = this.appendSpaceAndPostfixToHtmlString(nameString, '"' + author.givenName + '"');

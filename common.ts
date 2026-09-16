@@ -120,7 +120,8 @@ let personPopupAuthors: Author[] = null;
             (a.middleName === author.middleName) &&
             (a.lastName === author.lastName) &&
             (a.nameSuffix === author.nameSuffix) &&
-            (a.givenName === author.givenName)) {
+            (a.givenName === author.givenName) &&
+            (a.order === author.order)) {
             if (a.links !== undefined) {
                 for (let link of a.links) {
                     links.appendTag("li", ContentBuilder.linkToHtmlString(link));

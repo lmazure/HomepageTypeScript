@@ -5,6 +5,7 @@ export interface Author {
     lastName: string;
     nameSuffix: string;
     givenName: string;
+    order: string;
     articles: Article[]|undefined;
     links: Link[]|undefined;
 }
@@ -144,7 +145,8 @@ export class DataLoader {
                 (a.middleName === author.middleName) &&
                 (a.lastName === author.lastName) &&
                 (a.nameSuffix === author.nameSuffix) &&
-                (a.givenName === author.givenName)) {
+                (a.givenName === author.givenName) &&
+                (a.order === author.order)) {
                 return a;
                 }
         }
